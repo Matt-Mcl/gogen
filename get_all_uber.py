@@ -1,5 +1,4 @@
 from helper import *
-from time import sleep
 import psycopg
 
 get_tables()
@@ -31,5 +30,3 @@ for puz_url, sol_url in urls:
                 VALUES(%s, %s, %s, %s, %s)
                 ON CONFLICT DO NOTHING;
             """, (puz_url, sol_url, words, puzzle_board, solution_board))
-
-    sleep(1)

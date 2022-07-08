@@ -113,8 +113,6 @@ def get_words(image_url):
             cropped_img = img_gray[start[0] + j * 14:start[1] + j * 14, start[2] + i * 49:start[3] + i * 49]
             letters = []
 
-            cv2.imwrite(f"temp/{i}{j}.png", cropped_img)
-
             # Loop through each letter in word
             for k in range(0, 8):
                 # Crop word to letter

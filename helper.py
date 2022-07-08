@@ -104,19 +104,16 @@ def get_words(image_url):
     img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
 
     words = []
-    columns = 2
-
-    # Means there is only 1 column of words
-    if img_gray.shape[1] < 290:
-        columns = 1
 
     # Loop through each column of words
-    for i in range(0, columns):
+    for i in range(0, 2):
         # Loop through each row for each word
         for j in range(0, 11):
             # Crop image to just word
             cropped_img = img_gray[start[0] + j * 14:start[1] + j * 14, start[2] + i * 49:start[3] + i * 49]
             letters = []
+
+            cv2.imwrite(f"temp/{i}{j}.png", cropped_img)
 
             # Loop through each letter in word
             for k in range(0, 8):
@@ -132,7 +129,10 @@ def get_words(image_url):
                     template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
 
                     # Check if template matches letter image
-                    res = cv2.matchTemplate(letter_img, template,cv2.TM_CCOEFF_NORMED)
+                    try:
+                        res = cv2.matchTemplate(letter_img, template,cv2.TM_CCOEFF_NORMED)
+                    except:
+                        pass
                     maxVal = cv2.minMaxLoc(res)[1]
 
                     # Check against threshold value

@@ -1,6 +1,6 @@
 from helper import *
 
-# get_tables()
+get_tables()
 urls = read_tables()
 
 puzzle_board = get_board(urls[0][0])

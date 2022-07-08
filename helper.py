@@ -18,26 +18,35 @@ def get_tables():
         f.close()
 
 
-def read_tables():
+def read_tables(puzzle_type):
     with open ('tables.html', 'r') as f:
         html = f.read()
         f.close()
 
     soup = Soup(html)
 
-    uber = soup.find('table')[0].find('tr')[2:]
+    index = 0
 
-    uber_urls = []
+    if puzzle_type == "ultra":
+        index = 1
+    elif puzzle_type == "hyper":
+        index = 2
+    elif puzzle_type != "uber":
+        raise Exception(f"Invalid puzzle type: Choose uber, ultra or hyper. \"{puzzle_type}\" provided.")
+
+    puzzles = soup.find('table')[index].find('tr')[2:]
+
+    urls = []
     url_prefix = "http://www.puzzles.grosse.is-a-geek.com/"
 
-    for u in uber:
+    for u in puzzles:
         links = u.find('a')
         puzzle_link = links[0].attrs.get('href')
         solution_link = links[1].attrs.get('href')
 
-        uber_urls.append((f"{url_prefix}{puzzle_link}", f"{url_prefix}{solution_link}"))
+        urls.append((f"{url_prefix}{puzzle_link}", f"{url_prefix}{solution_link}"))
 
-    return uber_urls
+    return urls
 
 
 
@@ -98,7 +107,7 @@ def get_words(image_url):
     columns = 2
 
     # Means there is only 1 column of words
-    if img_gray.shape[1] < 300:
+    if img_gray.shape[1] < 290:
         columns = 1
 
     # Loop through each column of words
@@ -106,7 +115,7 @@ def get_words(image_url):
         # Loop through each row for each word
         for j in range(0, 11):
             # Crop image to just word
-            cropped_img = img_gray[start[0] + j * 14:start[1] + j * 14, start[2] + i * 56:start[3] + i * 56]
+            cropped_img = img_gray[start[0] + j * 14:start[1] + j * 14, start[2] + i * 49:start[3] + i * 49]
             letters = []
 
             # Loop through each letter in word
@@ -129,6 +138,10 @@ def get_words(image_url):
                     # Check against threshold value
                     if maxVal > 0.95:
                         letters.append(filename[0])
+                        break
+                
+                else:
+                    if len(letters) > 0:
                         break
 
             words.append(letters)

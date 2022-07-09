@@ -6,16 +6,24 @@ from urllib.request import urlopen
 
 
 def get_tables():
-    url = "http://www.puzzles.grosse.is-a-geek.com/uberarchive.html"
-    html = get(url)
+    # Get table urls
+    # Try multiple times as a dropped connection can cause this to fail
+    for _ in range(0, 5):
+        while True:
+            try:
+                url = "http://www.puzzles.grosse.is-a-geek.com/uberarchive.html"
+                html = get(url)
 
-    soup = Soup(html)
+                soup = Soup(html)
 
-    tables = soup.find('center')[2]
+                tables = soup.find('center')[2]
 
-    with open ('tables.html', 'w') as f:
-        f.write(str(tables))
-        f.close()
+                with open ('tables.html', 'w') as f:
+                    f.write(str(tables))
+                    f.close()
+            except TypeError:
+                continue
+            break
 
 
 def read_tables(puzzle_type):

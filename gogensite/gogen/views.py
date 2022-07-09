@@ -1,12 +1,13 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.conf import settings
 from copy import deepcopy
 import psycopg
 
 def test_view(request):
 
     if request.method == "GET":
-        with psycopg.connect("dbname=gogen user=postgresmd5") as conn:
+        with psycopg.connect(settings.PG_CONNECTION) as conn:
             with conn.cursor() as cur:
                 cur.execute("SELECT * FROM uber;")
 
@@ -27,7 +28,7 @@ def test_view(request):
 
         url = list(request.POST.items())[1][1]
 
-        with psycopg.connect("dbname=gogen user=postgresmd5") as conn:
+        with psycopg.connect(settings.PG_CONNECTION) as conn:
             with conn.cursor() as cur:
                 cur.execute("SELECT * FROM uber;")
 

@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-co!oyz#t473w7=z3qzv7&c11q8_8_s5lhn+ttjxqidndx8=-f2
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost"]
 
 
 # Application definition
@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'gogen'
 ]
 
 MIDDLEWARE = [
@@ -47,6 +48,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://*.localhost/*',
+    'http://*.127.0.0.1/*',
+    'https://*.climbing-app.co.uk/*'
 ]
 
 ROOT_URLCONF = 'gogensite.urls'

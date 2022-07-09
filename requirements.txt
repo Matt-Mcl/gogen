@@ -1,5 +1,9 @@
+asgiref==3.5.2
 backports.zoneinfo==0.2.1
+Django==4.0.6
 gazpacho==1.1
 numpy==1.23.0
 opencv-python==4.6.0.66
 psycopg==3.0.15
+psycopg2==2.9.3
+sqlparse==0.4.2

@@ -17,16 +17,21 @@
                             {% for row in board %}
                                 <tr>
                                     {% for cell in row %}
-                                        {% if cell %}
+                                        {% if cell|make_list|first == "*" %}
+                                            <td class="text-center"><input type="text" class="form-control" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}" value="{{ cell|slice:"1:" }}" /></td>
+                                        {% elif cell %}
                                             <td class="text-center">{{ cell }}</td>
                                         {% else %}
-                                            <td class="text-center"><input type="text" class="form-control" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}" /></td>
+                                            <td class="text-center"><input type="text" class="form-control" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}"/></td>
                                         {% endif %}
                                     {% endfor %}
                                 </tr>
                             {% endfor %}
                         </table>
                         <button class="btn btn-primary my-4" type="submit">Submit</button>
+                        {% if mistake %}
+                            <h3 class="mistakemsg">Something isn't right!</h3>
+                        {% endif %}
                     </form>
                     <p>Source: <a href="{{ url }}">{{ url }}</a></p>
                 </div>

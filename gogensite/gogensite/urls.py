@@ -21,5 +21,5 @@ from gogen import views
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    path('test/', views.test_view, name='test_view'),
+    path('', views.daily_view, name='daily_view'),
 ]

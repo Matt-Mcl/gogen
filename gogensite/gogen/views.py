@@ -4,22 +4,22 @@ from django.conf import settings
 from copy import deepcopy
 import psycopg
 
-def test_view(request):
+def daily_view(request):
 
     if request.method == "GET":
         with psycopg.connect(settings.PG_CONNECTION) as conn:
             with conn.cursor() as cur:
                 cur.execute("SELECT * FROM uber;")
 
-                test = cur.fetchone()
+                daily_uber = cur.fetchone()
 
                 return render(
                     request=request,
-                    template_name='test.html',
+                    template_name='puzzle.html',
                     context={
-                        'url': test[0],
-                        'words': test[2],
-                        'board': test[3]
+                        'url': daily_uber[0],
+                        'words': daily_uber[2],
+                        'board': daily_uber[3]
                     }
                 )
     
@@ -32,22 +32,31 @@ def test_view(request):
             with conn.cursor() as cur:
                 cur.execute("SELECT * FROM uber;")
 
-                test = cur.fetchone()
+                daily_uber = cur.fetchone()
 
-                solution_board = test[4]
+                solution_board = daily_uber[4]
 
         letters = deepcopy(solution_board)
-
-        
-        print(solution_board)
-
+ 
         for item in list(request.POST.items())[2:]:
             letters[int(item[0][0])][int(item[0][1])] = item[1]
 
-        print(letters)
+        if letters == solution_board:
+            return HttpResponse("Correct!")
+        else:
+            # Loop through each board and keep changes made by user
+            for i in range(0, 5):
+                for j, v in enumerate(zip(letters[i], daily_uber[3][i])):
+                    if v[0] != v[1]:
+                        letters[i][j] = f"*{letters[i][j]}"
 
-        print(letters == solution_board)
-        
-        
-
-        return HttpResponse("")
+            return render(
+                request=request,
+                template_name='puzzle.html',
+                context={
+                    'url': daily_uber[0],
+                    'words': daily_uber[2],
+                    'board': letters,
+                    'mistake': True
+                }
+            )

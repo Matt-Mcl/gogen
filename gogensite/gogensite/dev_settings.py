@@ -28,6 +28,8 @@ try:
 except KeyError as e:
     raise RuntimeError("Could not find a SECRET_KEY in environment") from e
 
+PG_CONNECTION = f"dbname={os.getenv('PG_DBNAME')} user={os.getenv('PG_USER')} password={os.getenv('PG_PASSWORD')}"
+
 DEBUG = True
 
 ALLOWED_HOSTS = ["gogen.climbing-app.co.uk", "localhost"]

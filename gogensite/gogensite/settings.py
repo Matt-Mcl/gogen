@@ -28,7 +28,7 @@ try:
 except KeyError as e:
     raise RuntimeError("Could not find a SECRET_KEY in environment") from e
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["gogen.climbing-app.co.uk", "localhost"]
 

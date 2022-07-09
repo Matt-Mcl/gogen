@@ -14,7 +14,5 @@ reload = False
 accesslog = errorlog = "/var/log/gunicorn/gogen/prod.log"
 # Redirect stdout/stderr to log file
 capture_output = True
-# PID file so you can easily fetch process ID
-pidfile = "/var/run/gunicorn/prod.pid"
 # Daemonize the Gunicorn process (detach & enter background)
 daemon = False

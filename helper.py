@@ -41,10 +41,12 @@ def read_tables(puzzle_type):
 
     for u in puzzles:
         links = u.find('a')
-        puzzle_link = links[0].attrs.get('href')
-        solution_link = links[1].attrs.get('href')
 
-        urls.append((f"{url_prefix}{puzzle_link}", f"{url_prefix}{solution_link}"))
+        if links is not None:
+            puzzle_link = links[0].attrs.get('href')
+            solution_link = links[1].attrs.get('href')
+
+            urls.append((f"{url_prefix}{puzzle_link}", f"{url_prefix}{solution_link}"))
 
     return urls
 
@@ -94,7 +96,7 @@ def get_board(image_url):
 
 def get_words(image_url):
     # y1, y2, x1, x2
-    start = [35, 44, 180, 236]
+    start = [35, 44, 180, 242]
 
     req = urlopen(image_url)
     arr = np.asarray(bytearray(req.read()), dtype=np.uint8)
@@ -110,11 +112,14 @@ def get_words(image_url):
         # Loop through each row for each word
         for j in range(0, 11):
             # Crop image to just word
-            cropped_img = img_gray[start[0] + j * 14:start[1] + j * 14, start[2] + i * 49:start[3] + i * 49]
+            cropped_img = img_gray[start[0] + j * 14:start[1] + j * 14, start[2] + i * 42:start[3] + i * 42]
             letters = []
 
+            # Debug
+            # cv2.imwrite(f"temp/{i}{j}.png", cropped_img)
+
             # Loop through each letter in word
-            for k in range(0, 8):
+            for k in range(0, 9):
                 # Crop word to letter
                 letter_img = cropped_img[0:9, 0 + k * 7:6 + k * 7]
 
@@ -139,13 +144,14 @@ def get_words(image_url):
                         break
                 
                 else:
-                    if len(letters) > 0:
+                    if len(letters) > 1:
                         break
+                    elif len(letters) > 0:
+                        letters = []
 
-            words.append(letters)
-
-    # Combine letters into list of words
-    words = [''.join(w) for w in words if len(w) > 1]
+            # Checks parts of words aren't being repeated
+            if len(list(filter(lambda x: ''.join(letters) in x, words))) == 0:
+                words.append(''.join(letters))
 
     return words
 

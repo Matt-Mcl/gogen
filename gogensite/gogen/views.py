@@ -1,15 +1,21 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.conf import settings
+from datetime import datetime, timedelta
 from copy import deepcopy
 import psycopg
 
 def daily_view(request):
 
     if request.method == "GET":
+
+        yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y%m%d')
+
+        url = f"http://www.puzzles.grosse.is-a-geek.com/images/gog/puz/uber/uber{yesterday}puz.png"
+        
         with psycopg.connect(settings.PG_CONNECTION) as conn:
             with conn.cursor() as cur:
-                cur.execute("SELECT * FROM uber;")
+                cur.execute(f"SELECT * FROM uber WHERE puzzle_url = '{url}';")
 
                 daily_uber = cur.fetchone()
 
@@ -30,7 +36,7 @@ def daily_view(request):
 
         with psycopg.connect(settings.PG_CONNECTION) as conn:
             with conn.cursor() as cur:
-                cur.execute("SELECT * FROM uber;")
+                cur.execute(f"SELECT * FROM uber WHERE puzzle_url = '{url}';")
 
                 daily_uber = cur.fetchone()
 

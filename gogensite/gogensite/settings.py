@@ -32,7 +32,7 @@ PG_CONNECTION = f"dbname={os.getenv('PG_DBNAME')} user={os.getenv('PG_USER')} pa
 
 DEBUG = False
 
-ALLOWED_HOSTS = ["gogen.climbing-app.co.uk", "localhost"]
+ALLOWED_HOSTS = ["gogen.manysite.net", "localhost"]
 
 # Application definition
 
@@ -59,7 +59,7 @@ MIDDLEWARE = [
 CSRF_TRUSTED_ORIGINS = [
     'http://*.localhost/*',
     'http://*.127.0.0.1/*',
-    'https://*.climbing-app.co.uk/*'
+    'https://*.manysite.net/*'
 ]
 
 ROOT_URLCONF = 'gogensite.urls'

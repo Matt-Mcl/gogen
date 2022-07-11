@@ -14,12 +14,19 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, re_path
+from django.contrib.auth import views as auth_views
 
 from gogen import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    path('login/', auth_views.LoginView.as_view(), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('register/', views.register, name='register'),
+
+    re_path(r'^(?P<puzzle_type>uber|hyper|ultra)(?P<puzzle_date>(\d{4})(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01]))$', views.puzzle_view, name='puzzle_view'),
 
     path('', views.daily_view, name='daily_view'),
 ]

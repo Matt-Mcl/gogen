@@ -38,13 +38,15 @@
                             <h3>Correct!</h3>
                         {% endif %}
                     </form>
-                    <p>Source: <a href="{{ url }}">{{ url }}</a></p>
                 </div>
                 <div class="col col-lg-4">
                     {% for w in words %}
                         <h3>{{ w }}</h3>
                     {% endfor %}
                 </div>
+            </div>
+            <div class="row">
+                <p>Source: <a href="{{ url }}">{{ url }}</a></p>
             </div>
         </div>
     </body>

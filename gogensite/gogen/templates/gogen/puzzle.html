@@ -6,12 +6,17 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Test Page</title>
+        <style>            
+            [id*="word_"]:checked + label {
+                text-decoration: line-through;
+            }
+        </style>
     </head>
     <body>
         <div class="container">
             <h2 class="my-4">{{ page_heading }}</h2>
             <div class="row">
-                <div class="col">
+                <div class="col" style="max-width: 1000px;">
                     <form method="post">
                         {% csrf_token %}
                         <input type="hidden" name="url" value="{{ url }}" />
@@ -30,6 +35,14 @@
                                 </tr>
                             {% endfor %}
                         </table>
+                        <ul class="list-group list-group-horizontal" style="display: flex; flex-wrap: wrap; flex-direction: row; max-width: 1000px;">
+                            {% for w in words %}
+                                <li class="list-group-item border-0">
+                                    <input type="checkbox" id="word_{{ w }}" style="display: none;"/>
+                                    <label for="word_{{ w }}"><b>{{ w }}</b></label>
+                                </li>
+                            {% endfor %}
+                        </ul>
                         <button class="btn btn-primary my-4" type="submit">Submit</button>
                         {% if mistake %}
                             <h3>Something isn't right!</h3>
@@ -38,11 +51,6 @@
                             <h3>Correct!</h3>
                         {% endif %}
                     </form>
-                </div>
-                <div class="col col-lg-4">
-                    {% for w in words %}
-                        <h3>{{ w }}</h3>
-                    {% endfor %}
                 </div>
             </div>
             <div class="row">

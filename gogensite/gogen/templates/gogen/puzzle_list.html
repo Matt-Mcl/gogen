@@ -1,0 +1,87 @@
+{% extends navbar_template|default:'registration/logged_in_base.html' %}
+{% block content2 %}
+{% load static %}
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{{ page_heading }}</title>
+    </head>
+    <body>
+        <div class="container">
+            <h2 class="my-4">{{ page_heading }}</h2>
+            <div class="row">
+                {% for puzzle_type in puzzles %}
+                    <div class="col">
+                        <table class="table">
+                            <tr>
+                                <th>{{ puzzle_type.0 }} Gogen</th>
+                                <th></th>
+                            </tr>
+                            <tr>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                            {% for p in puzzle_type.1 %}
+                                <tr>
+                                    <td><a href="/{{ p.0 }}">{{ p.0|slice:"-8:" }}</a></td>
+                                    <td>{{ p.1 }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="row">
+                <nav class="navbar navbar-expand-lg navbar-light">
+                    <a class="navbar-brand">Page</a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav2" aria-controls="navbarNav2" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav2">
+                        <ul class="navbar-nav">
+                            <li class="nav-item">
+                                {% if page_puzzles.number > 1 %}
+                                    <a class="nav-link active" aria-current="page" href="?page={{ page_puzzles.number | add:"-1" }}">&#60;</a>
+                                {% else %}
+                                    <a class="nav-link active" aria-current="page" href="">&#60;</a>
+                                {% endif %}
+                            </li>
+                            {% for page_num in lower_range %}
+                                <li class="nav-item">
+                                    <a class="nav-link active" aria-current="page" href="?page={{ page_num }}">{{ page_num }}</a>
+                                </li>
+                            {% endfor %}
+                            {% if page_puzzles.paginator.num_pages > 20 %}
+                                <li class="nav-item">
+                                    <a class="nav-link active" aria-current="page">...</a>
+                                </li>
+                            {% endif %}
+                            {% for page_num in upper_range %}
+                                <li class="nav-item">
+                                    <a class="nav-link active" aria-current="page" href="?page={{ page_num }}">{{ page_num }}</a>
+                                </li>
+                            {% endfor %}
+                            {% if page_puzzles.number < page_puzzles.paginator.num_pages %}
+                                <a class="nav-link active" aria-current="page" href="?page={{ page_puzzles.number | add:"1" }}">&#62;</a>
+                            {% else %}
+                                <a class="nav-link active" aria-current="page" href="">&#62;</a>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+            <form>
+                <div class="row">
+                    <div class="col-2" style="min-width: 150px;">
+                        <input class="form-control" type="number" placeholder="Page Number" name="page">
+                    </div>
+                    <div class="col">
+                        <button class="btn btn-primary mb-2" type="submit">Submit</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </body>
+</html>
+{% endblock %}

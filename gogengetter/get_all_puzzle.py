@@ -23,7 +23,8 @@ with psycopg.connect("dbname=gogen user=postgresmd5") as conn:
     with conn.cursor() as cur:
         cur.execute(f"""
             CREATE TABLE IF NOT EXISTS {puzzle_type}(
-            puzzle_url text NOT NULL PRIMARY KEY,
+            puzzle_name text NOT NULL PRIMARY KEY,
+            puzzle_url text,
             solution_url text,
             words text[],
             puzzle_board text[],
@@ -36,14 +37,16 @@ for puz_url, sol_url in urls:
     solution_board = get_board(sol_url)
     words = get_words(puz_url)
 
-    print((puz_url, sol_url, words, puzzle_board, solution_board))
+    puzzle_name = puz_url.split('/')[-1][:-7]
+
+    print((puzzle_name, puz_url, sol_url, words, puzzle_board, solution_board))
 
     with psycopg.connect("dbname=gogen user=postgresmd5") as conn:
         with conn.cursor() as cur:
             cur.execute(f"""
-                INSERT INTO {puzzle_type}(puzzle_url, solution_url, words, puzzle_board, solution_board)
-                VALUES(%s, %s, %s, %s, %s)
+                INSERT INTO {puzzle_type}(puzzle_name, puzzle_url, solution_url, words, puzzle_board, solution_board)
+                VALUES(%s, %s, %s, %s, %s, %s)
                 ON CONFLICT DO NOTHING;
-            """, (puz_url, sol_url, words, puzzle_board, solution_board))
+            """, (puzzle_name, puz_url, sol_url, words, puzzle_board, solution_board))
 
             conn.commit()

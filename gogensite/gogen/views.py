@@ -14,7 +14,7 @@ from .helpers import views_helper
 def daily_view(request):
 
     if request.method == "GET":
-        yesterday = (datetime.now() - timedelta(days=2)).strftime('%Y%m%d')
+        yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y%m%d')
         return views_helper.get_puzzle(request, "uber", yesterday, "Daily Uber")
 
     if request.method == "POST":

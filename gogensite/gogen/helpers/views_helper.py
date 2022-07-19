@@ -68,9 +68,9 @@ def post_puzzle(request, page_heading):
     # Create copy of solution board
     letters = deepcopy(solution_board)
 
+    # Remove button response from post items
     if post_items[-1][0] == "submit_button":
         post_items = post_items[:-1]
-
 
     # Copy the letters the user put in over the solution board
     # If the letters are wrong, their board will now be different to the solution board

@@ -70,40 +70,40 @@
             </div>
         </div>
         <script>
+            // When submit button is clicked add a "clicked" attribute
             $("form button[type=submit]").click(function() {
                 $("button[type=submit]", $(this).parents("form")).removeAttr("clicked");
                 $(this).attr("clicked", "true");
             });
 
-            $(document).ready(function() {
-                $("#letters_form").submit(function(e) {
-
-                    var button_name = $("button[type=submit][clicked=true]").attr("name");
-
-                    if (button_name === "save_button") {
-                        e.preventDefault(); // avoid to execute the actual submit of the form.
-                    }
-
+            // When form is submitted, POST
+            $("#letters_form").submit(function(e) {
+                var button_name = $("button[type=submit][clicked=true]").attr("name");
+                // If save button is pressed, do POST without redirect
+                if (button_name === "save_button") {
+                    e.preventDefault();
                     var form = $(this);
                     var actionUrl = form.attr('action');
-
-                    console.log(form.serialize())
-
+    
                     $.ajax({
                         type: "POST",
                         url: actionUrl,
-                        data: form.serialize(), // serializes the form's elements.
+                        data: form.serialize(),
                     });
-                });
+    
+                    console.log("saved");
+                }
             });
-        </script>
-        <script>
+
+            // Get letter inputs from form
             let form_letters = document.querySelectorAll('[name$="_letter"]');
 
+            // Add event listeners for keyup in inputs
             for (let item of form_letters) {
                 item.addEventListener('keyup', update_remaining_letters);
             }
 
+            // Update the remaining letters to reflect letters in form
             function update_remaining_letters() {
                 let remaining_letters = document.querySelectorAll('[id$="_remaining_letter"]');
 
@@ -128,6 +128,12 @@
             }
 
             update_remaining_letters();
+
+            var saveButton = document.getElementsByName("save_button")[0];
+            // Run save every 30 seconds
+            setInterval(function(){
+                saveButton.click();
+            }, 30000);
         </script>
     </body>
 </html>

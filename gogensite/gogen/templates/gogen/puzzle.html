@@ -18,7 +18,7 @@
             <h2 class="my-4">{{ page_heading }}</h2>
             <div class="row">
                 <div class="col" style="max-width: 1000px;">
-                    <form method="post">
+                    <form method="post" id="letters_form">
                         {% csrf_token %}
                         <input type="hidden" name="url" value="{{ url }}" />
                         <table class="table table-bordered">
@@ -52,7 +52,8 @@
                                 </li>
                             {% endfor %}
                         </ul>
-                        <button class="btn btn-primary my-4" type="submit">Submit</button>
+                        <button class="btn btn-primary my-4" type="submit" name="submit_button">Submit</button>
+                        <button class="btn btn-primary my-4" type="submit" name="save_button">Save</button>
                     </form>
                     <div class="row">
                         {% if mistake %}
@@ -68,6 +69,34 @@
                 <p>Source: <a href="{{ url }}">{{ url }}</a></p>
             </div>
         </div>
+        <script>
+            $("form button[type=submit]").click(function() {
+                $("button[type=submit]", $(this).parents("form")).removeAttr("clicked");
+                $(this).attr("clicked", "true");
+            });
+
+            $(document).ready(function() {
+                $("#letters_form").submit(function(e) {
+
+                    var button_name = $("button[type=submit][clicked=true]").attr("name");
+
+                    if (button_name === "save_button") {
+                        e.preventDefault(); // avoid to execute the actual submit of the form.
+                    }
+
+                    var form = $(this);
+                    var actionUrl = form.attr('action');
+
+                    console.log(form.serialize())
+
+                    $.ajax({
+                        type: "POST",
+                        url: actionUrl,
+                        data: form.serialize(), // serializes the form's elements.
+                    });
+                });
+            });
+        </script>
         <script>
             let form_letters = document.querySelectorAll('[name$="_letter"]');
 
@@ -92,8 +121,6 @@
                     }
                     value = value.toUpperCase();
 
-                    {% comment %} console.log(value) {% endcomment %}
-    
                     if (value) {
                         document.getElementById(`${value}_remaining_letter`).innerHTML = `<p style="text-decoration: line-through; color: #D3D3D3;">${value}</p>`
                     }

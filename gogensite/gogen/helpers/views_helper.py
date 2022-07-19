@@ -44,8 +44,9 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
 
 
 def post_puzzle(request, page_heading):
+    post_items = list(request.POST.items())
     # Get URL and date of the puzzle
-    url = list(request.POST.items())[1][1]
+    url = post_items[1][1]
     puzzle_type = url.split('/')[-1][0:4]
     puzzle_date = url.split('/')[-1][4:12]
 
@@ -67,9 +68,13 @@ def post_puzzle(request, page_heading):
     # Create copy of solution board
     letters = deepcopy(solution_board)
 
+    if post_items[-1][0] == "submit_button":
+        post_items = post_items[:-1]
+
+
     # Copy the letters the user put in over the solution board
     # If the letters are wrong, their board will now be different to the solution board
-    for item in list(request.POST.items())[2:]:
+    for item in post_items[2:]:
         letters[int(item[0][0])][int(item[0][1])] = item[1]
 
     # If the solution and the users board still match

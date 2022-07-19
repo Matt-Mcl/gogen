@@ -5,11 +5,11 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Test Page</title>
+        <title>{{ page_heading }}</title>
         <style>            
             [id*="word_"]:checked + label {
                 text-decoration: line-through;
-                color: #808080;
+                color: #D3D3D3;
             }
         </style>
     </head>
@@ -26,11 +26,11 @@
                                 <tr>
                                     {% for cell in row %}
                                         {% if cell|make_list|first == "*" %}
-                                            <td class="text-center"><input type="text" class="form-control" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}" value="{{ cell|slice:"1:" }}" /></td>
+                                            <td class="text-center"><input type="text" class="form-control" maxlength="1" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}_letter" value="{{ cell|slice:"1:" }}" oninput="this.value = this.value.toUpperCase()"/></td>
                                         {% elif cell %}
-                                            <td class="text-center">{{ cell }}</td>
+                                            <td class="text-center" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}_letter" value="{{cell}}">{{ cell }}</td>
                                         {% else %}
-                                            <td class="text-center"><input type="text" class="form-control" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}"/></td>
+                                            <td class="text-center"><input type="text" class="form-control" maxlength="1" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}_letter" oninput="this.value = this.value.toUpperCase()"/></td>
                                         {% endif %}
                                     {% endfor %}
                                 </tr>
@@ -44,20 +44,64 @@
                                 </li>
                             {% endfor %}
                         </ul>
+                        <br>
+                        <ul class="list-group list-group-horizontal" style="display: flex; flex-wrap: wrap; flex-direction: row; max-width: 1000px; line-height: 0;">
+                            {% for l in "ABCDEFGHIJKLMNOPQRSTUVWXY" %}
+                                <li class="list-group-item border-0" id="{{ l }}_remaining_letter" style="max-width: 0;">
+                                    <p>{{ l }}</p>
+                                </li>
+                            {% endfor %}
+                        </ul>
                         <button class="btn btn-primary my-4" type="submit">Submit</button>
+                    </form>
+                    <div class="row">
                         {% if mistake %}
                             <h3>Something isn't right!</h3>
                         {% endif %}
                         {% if complete %}
                             <h3>Correct!</h3>
                         {% endif %}
-                    </form>
+                    </div>
                 </div>
             </div>
             <div class="row">
                 <p>Source: <a href="{{ url }}">{{ url }}</a></p>
             </div>
         </div>
+        <script>
+            let form_letters = document.querySelectorAll('[name$="_letter"]');
+
+            for (let item of form_letters) {
+                item.addEventListener('keyup', update_remaining_letters);
+            }
+
+            function update_remaining_letters() {
+                let remaining_letters = document.querySelectorAll('[id$="_remaining_letter"]');
+
+                for (let item of remaining_letters) {
+                    item.getElementsByTagName('p')[0].style = ''
+                }
+
+                let form_letters = document.querySelectorAll('[name$="_letter"]');
+
+                for (let item of form_letters) {
+                    value = item.value;
+
+                    if (value === undefined) {
+                        value = item.getAttribute('value')
+                    }
+                    value = value.toUpperCase();
+
+                    {% comment %} console.log(value) {% endcomment %}
+    
+                    if (value) {
+                        document.getElementById(`${value}_remaining_letter`).innerHTML = `<p style="text-decoration: line-through; color: #D3D3D3;">${value}</p>`
+                    }
+                }
+            }
+
+            update_remaining_letters();
+        </script>
     </body>
 </html>
 {% endblock %}

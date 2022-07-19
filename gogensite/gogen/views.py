@@ -25,10 +25,10 @@ def daily_view(request):
 def puzzle_view(request, puzzle_date, puzzle_type):
 
     if request.method == "GET":
-        return views_helper.get_puzzle(request, puzzle_type, puzzle_date, f"{puzzle_type}{puzzle_date}")
+        return views_helper.get_puzzle(request, puzzle_type, puzzle_date, f"{puzzle_type.capitalize()}{puzzle_date}")
 
     if request.method == "POST":
-        return views_helper.post_puzzle(request, f"{puzzle_type}{puzzle_date}")
+        return views_helper.post_puzzle(request, f"{puzzle_type.capitalize()}{puzzle_date}")
 
 
 @login_required
@@ -89,7 +89,8 @@ def puzzle_list_view(request):
                 'page_puzzles': page_puzzles,
                 'puzzles': puzzles,
                 'lower_range': lower_range,
-                'upper_range': upper_range
+                'upper_range': upper_range,
+                'page_heading': "Puzzle List"
             }
         )
 

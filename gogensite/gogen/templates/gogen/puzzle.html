@@ -105,15 +105,18 @@
 
             // Update the remaining letters to reflect letters in form
             function update_remaining_letters() {
+                // Remove changes to remaining letters
                 let remaining_letters = document.querySelectorAll('[id$="_remaining_letter"]');
 
                 for (let item of remaining_letters) {
                     item.getElementsByTagName('p')[0].style = ''
                 }
-
+                // Get letters in form
                 let form_letters = document.querySelectorAll('[name$="_letter"]');
+                let changed_letters = [];
 
                 for (let item of form_letters) {
+                    item.style = '';
                     value = item.value;
 
                     if (value === undefined) {
@@ -122,8 +125,23 @@
                     value = value.toUpperCase();
 
                     if (value) {
-                        document.getElementById(`${value}_remaining_letter`).innerHTML = `<p style="text-decoration: line-through; color: #D3D3D3;">${value}</p>`
+                        if (changed_letters.includes(value)) {
+                            // If letter has been found twice in grid, make it red
+                            document.getElementById(`${value}_remaining_letter`).innerHTML = `<p style="color: #FF0000; display: inline-block;">${value}</p>`
+                            for (let box of form_letters) {
+                                // Checks for both input boxes and static boxes
+                                if ([box.value, box.getAttribute('value')].includes(value)) {
+                                    box.style = 'background-color: #FF4444;'
+                                }
+                            }
+                        } else {
+                            // Otherwise make it grey
+                            document.getElementById(`${value}_remaining_letter`).innerHTML = `<p style="text-decoration: line-through; color: #D3D3D3;">${value}</p>`
+                        }
                     }
+
+                    changed_letters.push(value);
+                    console.log(changed_letters);
                 }
             }
 

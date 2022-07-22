@@ -47,8 +47,8 @@ def post_puzzle(request, page_heading):
     post_items = list(request.POST.items())
     # Get URL and date of the puzzle
     url = post_items[1][1]
-    puzzle_type = url.split('/')[-1][0:4]
-    puzzle_date = url.split('/')[-1][4:12]
+    puzzle_type = url.split('/')[-1][:-15]
+    puzzle_date = url.split('/')[-1][-15:-7]
 
     # Pull the puzzle from the database
     with psycopg.connect(settings.PG_CONNECTION) as conn:

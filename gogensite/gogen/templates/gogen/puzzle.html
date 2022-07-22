@@ -53,7 +53,8 @@
                             {% endfor %}
                         </ul>
                         <button class="btn btn-primary my-4" type="submit" name="submit_button">Submit</button>
-                        <button class="btn btn-primary my-4" type="submit" name="save_button">Save</button>
+                        <button class="btn btn-secondary my-4" type="submit" name="save_button">Save</button>
+                        <button class="btn btn-danger my-4" type="button" name="ghost_button">Ghost Off</button>
                     </form>
                     <div class="row">
                         {% if mistake %}
@@ -95,13 +96,38 @@
                 }
             });
 
-            // Get letter inputs from form
-            let form_letters = document.querySelectorAll('[name$="_letter"]');
+            // When ghost button is clicked, toggle it between red and green
+            $("button[name=ghost_button]").click(function() {
+                ghost_button = $(this)[0];
 
-            // Add event listeners for keyup in inputs
-            for (let item of form_letters) {
-                item.addEventListener('keyup', update_remaining_letters);
-            }
+                if (ghost_button.className.includes("danger")) {
+                    ghost_button.className = "btn btn-success my-4";
+                    ghost_button.innerHTML = "Ghost On";
+                } else {
+                    ghost_button.className = "btn btn-danger my-4";
+                    ghost_button.innerHTML = "Ghost Off";
+                }
+            });
+
+            $('[name$="_letter"]').each(function() {
+                var elem = $(this);
+            
+                // Save current value of element
+                elem.data('oldVal', elem.val());
+            
+                // Look for changes in the value
+                elem.bind("propertychange change click keyup input paste", function(event){
+                    // If value has changed...
+                    if (elem.data('oldVal') != elem.val()) {
+                        // Update stored value
+                        elem.data('oldVal', elem.val())
+                        console.log("update")
+
+                        check_ghost(elem);
+                        update_remaining_letters();
+                    }
+                });
+            });
 
             // Update the remaining letters to reflect letters in form
             function update_remaining_letters() {
@@ -115,12 +141,11 @@
                 let form_letters = document.querySelectorAll('[name$="_letter"]');
                 let changed_letters = [];
 
-                for (let item of form_letters) {
-                    item.style = '';
-                    value = item.value;
+                for (let letter of form_letters) {
+                    value = letter.value;
 
                     if (value === undefined) {
-                        value = item.getAttribute('value')
+                        value = letter.getAttribute('value')
                     }
                     value = value.toUpperCase();
 
@@ -131,6 +156,8 @@
                             for (let box of form_letters) {
                                 // Checks for both input boxes and static boxes
                                 if ([box.value, box.getAttribute('value')].includes(value)) {
+                                    if (box.name === "12_letter") {
+                                    }
                                     box.style = 'background-color: #FF4444;'
                                 }
                             }
@@ -138,10 +165,30 @@
                             // Otherwise make it grey
                             document.getElementById(`${value}_remaining_letter`).innerHTML = `<p style="text-decoration: line-through; color: #D3D3D3;">${value}</p>`
                         }
+                    // Remove the red fill from empty boxes
+                    } else {
+                        letter.style = "";
+                        letter.setAttribute("value", "");
                     }
 
                     changed_letters.push(value);
-                    console.log(changed_letters);
+                }
+            }
+
+            function check_ghost(elem) {
+                box = elem[0]
+                // Checks if ghost button is pressed
+                if (box.value != "") {
+                    if($("button[name=ghost_button]")[0].className.includes("success")) {
+                        console.log(box.value.slice())
+                        placeholder_value = box.value.slice()
+                        if (box.placeholder.includes(placeholder_value)) {
+                            box.placeholder = box.placeholder.replace(placeholder_value, "")
+                        } else {
+                            box.placeholder += placeholder_value
+                        }
+                        box.value = "";
+                    }
                 }
             }
 

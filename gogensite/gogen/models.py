@@ -18,7 +18,14 @@ class PuzzleLog(models.Model):
         ),
         size=5,
     )
-    
+    placeholders = ArrayField(
+        ArrayField(
+            models.CharField(max_length=30, blank=True),
+            size=5,
+        ),
+        size=5,
+    )
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     UniqueConstraint(fields = ['puzzle_type', 'puzzle_date', 'user'], name = 'unique_puzzle_type_and_date_per_user')

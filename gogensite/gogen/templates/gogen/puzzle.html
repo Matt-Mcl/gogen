@@ -97,7 +97,7 @@
                         url: actionUrl,
                         data: form.serialize(),
                     });
-    
+
                     console.log("saved");
                 }
             });
@@ -127,7 +127,6 @@
                     if (elem.data('oldVal') != elem.val()) {
                         // Update stored value
                         elem.data('oldVal', elem.val())
-                        console.log("update")
 
                         check_ghost(elem);
                         update_remaining_letters();
@@ -156,21 +155,28 @@
                     value = value.toUpperCase();
 
                     if (value) {
+                        letter_style = "";
+                        box_colour = "";
+
                         if (changed_letters.includes(value)) {
                             // If letter has been found twice in grid, make it red
-                            document.getElementById(`${value}_remaining_letter`).innerHTML = `<p style="color: #FF0000; display: inline-block;">${value}</p>`
-                            for (let box of form_letters) {
-                                // Checks for both input boxes and static boxes
-                                if ([box.value, box.getAttribute('value')].includes(value)) {
-                                    box.style = 'background-color: #FF4444;'
-                                }
-                            }
+                            letter_style = `<p style="color: #FF0000; display: inline-block;">${value}</p>`;
+                            box_colour = 'background-color: #FF4444;';
                         } else {
                             // Otherwise make it grey
-                            document.getElementById(`${value}_remaining_letter`).innerHTML = `<p style="text-decoration: line-through; color: #D3D3D3;">${value}</p>`
+                            letter_style = `<p style="text-decoration: line-through; color: #D3D3D3;">${value}</p>`;
+                            box_colour = '';
                         }
-                    // Remove the red fill from empty boxes
+
+                        document.getElementById(`${value}_remaining_letter`).innerHTML = `${letter_style}`;
+                        for (let box of form_letters) {
+                            // Checks for both input boxes and static boxes
+                            if ([box.value, box.getAttribute('value')].includes(value)) {
+                                box.style = box_colour;
+                            }
+                        }
                     } else {
+                        // Remove the red fill from empty boxes
                         letter.style = "";
                         letter.setAttribute("value", "");
                     }
@@ -184,7 +190,6 @@
                 // Checks if ghost button is pressed
                 if (box.value != "") {
                     if($("button[name=ghost_button]")[0].className.includes("success")) {
-                        console.log(box.value.slice())
                         placeholder_value = box.value.slice()
                         if (box.placeholder.includes(placeholder_value)) {
                             box.placeholder = box.placeholder.replace(placeholder_value, "")

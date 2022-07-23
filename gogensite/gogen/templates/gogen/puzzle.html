@@ -12,6 +12,12 @@
                 text-decoration: line-through;
                 color: #D3D3D3;
             }
+            input[type="text"]::placeholder {
+                font-size: 12px;
+                color: orange;
+                top: 5px;
+                position: absolute;
+            }
         </style>
     </head>
     <body>
@@ -161,7 +167,7 @@
                         if (changed_letters.includes(value)) {
                             // If letter has been found twice in grid, make it red
                             letter_style = `<p style="color: #FF0000; display: inline-block;">${value}</p>`;
-                            box_colour = 'background-color: #FF4444;';
+                            box_colour = '#FF4444';
                         } else {
                             // Otherwise make it grey
                             letter_style = `<p style="text-decoration: line-through; color: #D3D3D3;">${value}</p>`;
@@ -172,12 +178,12 @@
                         for (let box of form_letters) {
                             // Checks for both input boxes and static boxes
                             if ([box.value, box.getAttribute('value')].includes(value)) {
-                                box.style = box_colour;
+                                box.style['background-color'] = box_colour;
                             }
                         }
                     } else {
                         // Remove the red fill from empty boxes
-                        letter.style = "";
+                        letter.style['background-color'] = "#FFFFFF";
                         letter.setAttribute("value", "");
                     }
 
@@ -186,9 +192,9 @@
             }
 
             function check_ghost(elem) {
-                box = elem[0]
-                // Checks if ghost button is pressed
-                if (box.value != "") {
+                box = elem[0];
+                if (box.value !== "") {
+                    // Checks if ghost button is pressed
                     if($("button[name=ghost_button]")[0].className.includes("success")) {
                         placeholder_value = box.value.slice()
                         if (box.placeholder.includes(placeholder_value)) {
@@ -196,6 +202,7 @@
                         } else {
                             box.placeholder += placeholder_value
                         }
+                        box.placeholder = box.placeholder.split('').sort().join('');
                         box.value = "";
                     }
                 }

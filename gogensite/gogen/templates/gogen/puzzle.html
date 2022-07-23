@@ -1,5 +1,6 @@
 {% extends navbar_template|default:'registration/logged_in_base.html' %}
 {% block content2 %}
+{% load tags %}
 {% load static %}
 <html>
     <head>
@@ -22,15 +23,15 @@
                         {% csrf_token %}
                         <input type="hidden" name="url" value="{{ url }}" />
                         <table class="table table-bordered">
-                            {% for row in board %}
+                            {% for row in board|zip:placeholders %}
                                 <tr>
-                                    {% for cell in row %}
-                                        {% if cell|make_list|first == "*" %}
-                                            <td class="text-center"><input type="text" class="form-control" maxlength="1" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}_letter" value="{{ cell|slice:"1:" }}" oninput="this.value = this.value.toUpperCase()"/></td>
-                                        {% elif cell %}
-                                            <td class="text-center" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}_letter" value="{{cell}}">{{ cell }}</td>
+                                    {% for board_cell, placeholder_cell in row|tuplezip %}
+                                        {% if board_cell|make_list|first == "*" %}
+                                            <td class="text-center"><input type="text" class="form-control" maxlength="1" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}_letter" value="{{ board_cell|slice:"1:" }}" oninput="this.value = this.value.toUpperCase()" placeholder={{ placeholder_cell }}></input></td>
+                                        {% elif board_cell %}
+                                            <td class="text-center" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}_letter" value="{{board_cell}}">{{ board_cell }}</td>
                                         {% else %}
-                                            <td class="text-center"><input type="text" class="form-control" maxlength="1" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}_letter" oninput="this.value = this.value.toUpperCase()"/></td>
+                                            <td class="text-center"><input type="text" class="form-control" maxlength="1" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}_letter" oninput="this.value = this.value.toUpperCase()" placeholder={{ placeholder_cell }}></input></td>
                                         {% endif %}
                                     {% endfor %}
                                 </tr>
@@ -79,11 +80,16 @@
 
             // When form is submitted, POST
             $("#letters_form").submit(function(e) {
+                var form = $(this);
+                // Add placeholder values as field to form
+                placeholders = get_placeholders()
+                form.append(`<input type="hidden" name="placeholders" value="${placeholders}" />`);
+
                 var button_name = $("button[type=submit][clicked=true]").attr("name");
                 // If save button is pressed, do POST without redirect
                 if (button_name === "save_button") {
                     e.preventDefault();
-                    var form = $(this);
+                    
                     var actionUrl = form.attr('action');
     
                     $.ajax({
@@ -156,8 +162,6 @@
                             for (let box of form_letters) {
                                 // Checks for both input boxes and static boxes
                                 if ([box.value, box.getAttribute('value')].includes(value)) {
-                                    if (box.name === "12_letter") {
-                                    }
                                     box.style = 'background-color: #FF4444;'
                                 }
                             }
@@ -190,6 +194,19 @@
                         box.value = "";
                     }
                 }
+            }
+
+            function get_placeholders() {
+                let placeholders = [];
+                let form_letters = document.querySelectorAll('[name$="_letter"]');
+                for (let letter of form_letters) {
+                    value = letter.getAttribute("placeholder");
+
+                    if (value !== undefined) {
+                        placeholders.push(value);
+                    }
+                }
+                return placeholders;
             }
 
             update_remaining_letters();

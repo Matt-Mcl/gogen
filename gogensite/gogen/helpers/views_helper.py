@@ -18,6 +18,7 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
     url = puzzle[1]
     words = puzzle[3]
     board = puzzle[4]
+    placeholders = [["" for _ in range(5)] for _ in range(5)] 
     navbar_template = 'registration/logged_out_base.html'
 
     # If logged in, get the user's puzzlelog data for the given puzzle
@@ -29,6 +30,7 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
         # If user has already filled some letters out, add them to the board
         if user_puzzle_log.count() > 0:
             board = user_puzzle_log[0].board
+            placeholders = user_puzzle_log[0].placeholders
 
     return render(
         request=request,
@@ -37,6 +39,7 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
             'url': url,
             'words': words,
             'board': board,
+            'placeholders': placeholders,
             'page_heading': page_heading,
             'navbar_template': navbar_template
         }
@@ -45,6 +48,14 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
 
 def post_puzzle(request, page_heading):
     post_items = list(request.POST.items())
+    print(post_items)
+    # Create 2D array of placeholders
+    placeholders = [["" for _ in range(5)] for _ in range(5)] 
+    for i, v in enumerate(post_items.pop()[1].split(',')):
+        placeholders[i//5][i%5] = v
+
+    print(placeholders)
+
     # Get URL and date of the puzzle
     url = post_items[1][1]
     puzzle_type = url.split('/')[-1][:-15]
@@ -70,8 +81,8 @@ def post_puzzle(request, page_heading):
 
     # Remove button response from post items
     if post_items[-1][0] == "submit_button":
-        post_items = post_items[:-1]
-
+        post_items.pop()
+    
     # Copy the letters the user put in over the solution board
     # If the letters are wrong, their board will now be different to the solution board
     for item in post_items[2:]:
@@ -87,11 +98,11 @@ def post_puzzle(request, page_heading):
             user_puzzle_log = PuzzleLog.objects.filter(puzzle_type=puzzle_type, puzzle_date=puzzle_date, user=request.user)
             # Create new record for puzzlelog completion if it doesn't exist
             if user_puzzle_log.count() == 0:
-                puzzle_log = PuzzleLog(puzzle_type=puzzle_type, puzzle_date=puzzle_date, status='C', board=letters, user=request.user)
+                puzzle_log = PuzzleLog(puzzle_type=puzzle_type, puzzle_date=puzzle_date, status='C', board=letters, placeholders=placeholders, user=request.user)
                 puzzle_log.save()
             # If record already exists, mark as completed
             else:
-                user_puzzle_log.update(status='C', board=letters)
+                user_puzzle_log.update(status='C', board=letters, placeholders=placeholders)
     else:
         mistake = True
         # Loop through each cell in the board and flag user changes with an asterisk
@@ -106,11 +117,11 @@ def post_puzzle(request, page_heading):
             user_puzzle_log = PuzzleLog.objects.filter(puzzle_type=puzzle_type, puzzle_date=puzzle_date, user=request.user)
             # Create new record for incomplete puzzlelog if it doesn't exist
             if user_puzzle_log.count() == 0:
-                puzzle_log = PuzzleLog(puzzle_type=puzzle_type, puzzle_date=puzzle_date, status='I', board=letters, user=request.user)
+                puzzle_log = PuzzleLog(puzzle_type=puzzle_type, puzzle_date=puzzle_date, status='I', board=letters, placeholders=placeholders, user=request.user)
                 puzzle_log.save()
             # If record already exists, updates the board with the new letters the user put in
             else:
-                user_puzzle_log.update(board=letters)
+                user_puzzle_log.update(board=letters, placeholders=placeholders)
 
     return render(
         request=request,
@@ -119,6 +130,7 @@ def post_puzzle(request, page_heading):
             'url': url,
             'words': words,
             'board': letters,
+            'placeholders': placeholders,
             'mistake': mistake,
             'complete': complete,
             'page_heading': page_heading,

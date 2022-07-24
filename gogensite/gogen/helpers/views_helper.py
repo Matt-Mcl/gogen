@@ -18,7 +18,7 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
     url = puzzle[1]
     words = puzzle[3]
     board = puzzle[4]
-    placeholders = [["" for _ in range(5)] for _ in range(5)] 
+    placeholders = [["" for _ in range(5)] for _ in range(5)]
     navbar_template = 'registration/logged_out_base.html'
 
     # If logged in, get the user's puzzlelog data for the given puzzle
@@ -48,13 +48,10 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
 
 def post_puzzle(request, page_heading):
     post_items = list(request.POST.items())
-    print(post_items)
     # Create 2D array of placeholders
     placeholders = [["" for _ in range(5)] for _ in range(5)] 
     for i, v in enumerate(post_items.pop()[1].split(',')):
         placeholders[i//5][i%5] = v
-
-    print(placeholders)
 
     # Get URL and date of the puzzle
     url = post_items[1][1]

@@ -32,45 +32,39 @@ def puzzle_view(request, puzzle_date, puzzle_type):
 
 
 @login_required
-def puzzle_list_view(request):
+def puzzle_list_view(request, puzzle_type):
 
     if request.method == "GET":
-
-        puzzle_types = ["uber", "ultra", "hyper"]
         puzzles = []
 
         this_page = request.GET.get("page", 1)
 
-        for puzzle_type in puzzle_types:
-            puzzle_type_array = []
-            # Get all puzzles by type
-            with psycopg.connect(settings.PG_CONNECTION) as conn:
-                with conn.cursor() as cur:
-                    cur.execute(f"SELECT puzzle_name FROM {puzzle_type} ORDER BY puzzle_name DESC")
-                    db_puzzles = cur.fetchall()
+        # Get all puzzles by type
+        with psycopg.connect(settings.PG_CONNECTION) as conn:
+            with conn.cursor() as cur:
+                cur.execute(f"SELECT puzzle_name FROM {puzzle_type} ORDER BY puzzle_name DESC")
+                db_puzzles = cur.fetchall()
 
-            # Paginate to keep 15 per page
-            paginated_puzzles = Paginator(db_puzzles, 15)
+        # Paginate to keep 15 per page
+        paginated_puzzles = Paginator(db_puzzles, 15)
 
-            # Validate invalid page numbers
-            try:
-                page_puzzles = paginated_puzzles.page(this_page)
-            except (PageNotAnInteger, EmptyPage):
-                this_page = "1"
-                page_puzzles = paginated_puzzles.page(1)
+        # Validate invalid page numbers
+        try:
+            page_puzzles = paginated_puzzles.page(this_page)
+        except (PageNotAnInteger, EmptyPage):
+            this_page = "1"
+            page_puzzles = paginated_puzzles.page(1)
 
-            # Check if the user has completed the puzzle
-            for puzzle in page_puzzles:
-                puzzle_type = puzzle[0][:-8]
-                puzzle_date = puzzle[0][-8:]
-                user_puzzle_log = PuzzleLog.objects.filter(puzzle_type=puzzle_type, puzzle_date=puzzle_date, user=request.user)
+        # Check if the user has completed the puzzle
+        for puzzle in page_puzzles:
+            p_type = puzzle[0][:-8]
+            p_date = puzzle[0][-8:]
+            user_puzzle_log = PuzzleLog.objects.filter(puzzle_type=p_type, puzzle_date=p_date, user=request.user)
 
-                if user_puzzle_log.count() > 0:
-                    puzzle_type_array.append( (puzzle[0], user_puzzle_log[0].status) )
-                else:
-                    puzzle_type_array.append( (puzzle[0], 'I') )
-
-            puzzles.append( (puzzle_type.capitalize(), puzzle_type_array) )
+            if user_puzzle_log.count() > 0:
+                puzzles.append( (puzzle[0], user_puzzle_log[0].status) )
+            else:
+                puzzles.append( (puzzle[0], 'I') )
 
         lower_range = range(1, paginated_puzzles.num_pages + 1)
         upper_range = None
@@ -87,6 +81,7 @@ def puzzle_list_view(request):
             template_name="gogen/puzzle_list.html",
             context={
                 'page_puzzles': page_puzzles,
+                'puzzle_type': puzzle_type.capitalize(),
                 'puzzles': puzzles,
                 'lower_range': lower_range,
                 'upper_range': upper_range,

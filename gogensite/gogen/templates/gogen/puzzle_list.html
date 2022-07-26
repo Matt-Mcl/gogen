@@ -11,26 +11,22 @@
         <div class="container">
             <h2 class="my-4">{{ page_heading }}</h2>
             <div class="row">
-                {% for puzzle_type in puzzles %}
-                    <div class="col">
-                        <table class="table">
-                            <tr>
-                                <th>{{ puzzle_type.0 }} Gogen</th>
-                                <th></th>
-                            </tr>
-                            <tr>
-                                <th>Date</th>
-                                <th>Status</th>
-                            </tr>
-                            {% for p in puzzle_type.1 %}
-                                <tr>
-                                    <td><a href="/{{ p.0 }}">{{ p.0|slice:"-8:" }}</a></td>
-                                    <td>{{ p.1 }}</td>
-                                </tr>
-                            {% endfor %}
-                        </table>
-                    </div>
-                {% endfor %}
+                <table class="table">
+                    <tr>
+                        <th>{{ puzzle_type }} Gogen</th>
+                        <th></th>
+                    </tr>
+                    <tr>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                    {% for p in puzzles %}
+                        <tr>
+                            <td><a href="/{{ p.0 }}">{{ p.0|slice:"-8:" }}</a></td>
+                            <td>{{ p.1 }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
             </div>
             <div class="row">
                 <nav class="navbar navbar-expand-lg navbar-light">

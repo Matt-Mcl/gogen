@@ -61,6 +61,7 @@
                         </ul>
                         <button class="btn btn-primary my-4" type="submit" name="submit_button">Submit</button>
                         <button class="btn btn-secondary my-4" type="submit" name="save_button">Save</button>
+                        <button class="btn btn-secondary my-4" type="button" name="reset_button">Reset</button>
                         <button class="btn btn-danger my-4" type="button" name="ghost_button">Ghost Off</button>
                     </form>
                     <div class="row">
@@ -118,6 +119,18 @@
                 } else {
                     ghost_button.className = "btn btn-danger my-4";
                     ghost_button.innerHTML = "Ghost Off";
+                }
+            });
+
+            // When reset button is clicked, clear grid and save
+            $("button[name=reset_button]").click(function() {
+                if (confirm("Are you sure you want to reset?")) {
+                    $("#letters_form").find(':input').not(':hidden').each(function(i, form_input) {
+                        form_input.value = "";
+                        form_input.placeholder = "";
+                    });
+                    update_remaining_letters()
+                    saveButton.click();
                 }
             });
 

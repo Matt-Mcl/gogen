@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.conf import settings
+from django.http import HttpResponseNotFound
 from copy import deepcopy
 import psycopg
 
@@ -58,12 +59,18 @@ def post_puzzle(request, page_heading):
     puzzle_type = url.split('/')[-1][:-15]
     puzzle_date = url.split('/')[-1][-15:-7]
 
+    if puzzle_type not in ["uber", "ultra", "hyper"]:
+        return HttpResponseNotFound("URL has been modified: Invalid puzzle type in URL.")
+
     # Pull the puzzle from the database
     with psycopg.connect(settings.PG_CONNECTION) as conn:
         with conn.cursor() as cur:
             cur.execute(f"SELECT * FROM {puzzle_type} WHERE puzzle_url = '{url}';")
 
             puzzle = cur.fetchone()
+
+            if puzzle is None:
+                return HttpResponseNotFound("URL has been modified: Puzzle not found in database.")
 
             solution_board = puzzle[5]
 

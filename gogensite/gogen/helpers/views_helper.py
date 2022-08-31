@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.conf import settings
 from django.http import HttpResponseNotFound
 from copy import deepcopy
+import re
 import psycopg
 
 from ..models import *
@@ -56,11 +57,14 @@ def post_puzzle(request, page_heading):
 
     # Get URL and date of the puzzle
     url = post_items[1][1]
+
+    pattern = re.compile(r'^(http:\/\/www\.puzzles\.grosse\.is-a-geek\.com\/images\/gog\/puz\/)(uber|ultra|hyper)(\/)(uber|ultra|hyper)([0-9]{8})(puz\.png)$')
+
+    if not pattern.match(url):
+        return HttpResponseNotFound("URL has been modified.")
+
     puzzle_type = url.split('/')[-1][:-15]
     puzzle_date = url.split('/')[-1][-15:-7]
-
-    if puzzle_type not in ["uber", "ultra", "hyper"]:
-        return HttpResponseNotFound("URL has been modified: Invalid puzzle type in URL.")
 
     # Pull the puzzle from the database
     with psycopg.connect(settings.PG_CONNECTION) as conn:

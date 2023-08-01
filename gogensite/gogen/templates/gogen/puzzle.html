@@ -7,11 +7,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{{ page_heading }}</title>
-        <style>            
-            [id*="word_"]:checked + label {
-                text-decoration: line-through;
-                color: #D3D3D3;
-            }
+        <style>
             input[type="text"]::placeholder {
                 font-size: 12px;
                 color: orange;
@@ -45,9 +41,8 @@
                         </table>
                         <ul class="list-group list-group-horizontal" style="display: flex; flex-wrap: wrap; flex-direction: row; max-width: 1000px;">
                             {% for w in words %}
-                                <li class="list-group-item border-0">
-                                    <input type="checkbox" id="word_{{ w }}" style="display: none;"/>
-                                    <label for="word_{{ w }}"><b>{{ w }}</b></label>
+                                <li class="list-group-item border-0" id="{{ w }}_word" style="padding: 5px 15px 5px 15px;">
+                                    <b>{{ w }}</b>
                                 </li>
                             {% endfor %}
                         </ul>
@@ -153,6 +148,105 @@
                 });
             });
 
+            // Update remaining words to reflect strings of letters in form
+            function update_words() {
+                let remaining_words = document.querySelectorAll('[id$="_word"]');
+                let valid_words = Array.from(remaining_words, item => item.innerText);
+
+                let form_letters = document.querySelectorAll('[name$="_letter"]');
+                form_letters = Array.from(form_letters, item => {
+                    if (item.innerText === "") {
+                        return item.value;
+                    } else {
+                        return item.innerText;
+                    }
+                });
+                let grid = [];
+                while(form_letters.length) grid.push(form_letters.splice(0, 5));
+
+                // TrieNode class for the Trie data structure
+                class TrieNode {
+                    constructor() {
+                        this.children = new Map();
+                        this.isEndOfWord = false;
+                    }
+                }
+                
+                // Trie class for building and searching words in the Trie
+                class Trie {
+                    constructor() {
+                        this.root = new TrieNode();
+                    }
+                
+                    insert(word) {
+                        let node = this.root;
+                        for (const char of word) {
+                            if (!node.children.has(char)) {
+                                node.children.set(char, new TrieNode());
+                            }
+                            node = node.children.get(char);
+                        }
+                        node.isEndOfWord = true;
+                    }
+                }
+
+                const trie = new Trie();
+                for (const word of valid_words) {
+                    trie.insert(word);
+                }
+            
+                const rows = grid.length;
+                const cols = grid[0].length;
+                const result = new Set();
+            
+                function dfs(x, y, node, path) {
+                    if (x < 0 || x >= rows || y < 0 || y >= cols) {
+                        return;
+                    }
+                
+                    const char = grid[x][y];
+                    if (!node.children.has(char)) {
+                        return;
+                    }
+                
+                    path += char;
+                    node = node.children.get(char);
+                
+                    if (node.isEndOfWord) {
+                        result.add(path);
+                    }
+                
+                    const originalChar = grid[x][y];
+                    grid[x][y] = '#'; // Mark as visited
+                    dfs(x + 1, y, node, path);
+                    dfs(x - 1, y, node, path);
+                    dfs(x, y + 1, node, path);
+                    dfs(x, y - 1, node, path);
+
+                    dfs(x + 1, y + 1, node, path);
+                    dfs(x + 1, y - 1, node, path);
+                    dfs(x - 1, y + 1, node, path);
+                    dfs(x - 1, y - 1, node, path);
+                    grid[x][y] = originalChar; // Restore the original character
+                    
+                }
+            
+                for (let i = 0; i < rows; i++) {
+                    for (let j = 0; j < cols; j++) {
+                        dfs(i, j, trie.root, '');
+                    }
+                }
+                
+                for (const word of remaining_words) {
+                    let word_style = `<b>${word.innerText}</b>`;
+                    if (result.has(word.innerText)) {
+                        word_style = `<b style="text-decoration: line-through; color: #D3D3D3;">${word.innerText}</b>`;
+                    }
+                    word.innerHTML = `${word_style}`;
+                }
+
+            }
+
             // Update the remaining letters to reflect letters in form
             function update_remaining_letters() {
                 // Remove changes to remaining letters
@@ -165,7 +259,7 @@
                 let form_letters = document.querySelectorAll('[name$="_letter"]');
                 let changed_letters = [];
 
-                for (let letter of form_letters) {
+                for (const letter of form_letters) {
                     value = letter.value;
 
                     if (value === undefined) {
@@ -202,6 +296,7 @@
 
                     changed_letters.push(value);
                 }
+                update_words();
             }
 
             function check_ghost(elem) {

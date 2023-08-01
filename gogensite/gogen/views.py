@@ -61,10 +61,10 @@ def puzzle_list_view(request, puzzle_type):
             p_date = puzzle[0][-8:]
             user_puzzle_log = PuzzleLog.objects.filter(puzzle_type=p_type, puzzle_date=p_date, user=request.user)
 
-            if user_puzzle_log.count() > 0:
-                puzzles.append( (puzzle[0], user_puzzle_log[0].status) )
+            if user_puzzle_log.count() > 0 and user_puzzle_log[0].status == PuzzleLog.STATUS_CHOICES[0][0]:
+                puzzles.append( (puzzle[0], "✓") )
             else:
-                puzzles.append( (puzzle[0], 'I') )
+                puzzles.append( (puzzle[0], "-") )
 
         lower_range = range(1, paginated_puzzles.num_pages + 1)
         upper_range = None
@@ -88,6 +88,31 @@ def puzzle_list_view(request, puzzle_type):
                 'page_heading': "Puzzle List"
             }
         )
+
+
+@login_required
+def leaderboard_view(request):
+
+    users_and_scores = []
+
+    for user in User.objects.all():
+        if not user.is_superuser:
+            user_puzzle_logs = PuzzleLog.objects.filter(user=user, status='C')
+            uber_count = user_puzzle_logs.filter(puzzle_type='uber').count()
+            ultra_count = user_puzzle_logs.filter(puzzle_type='ultra').count()
+            hyper_count = user_puzzle_logs.filter(puzzle_type='hyper').count()
+            users_and_scores.append( (user.username, uber_count, ultra_count, hyper_count, user_puzzle_logs.count()) )
+    
+    users_and_scores.sort(key=lambda x: x[1], reverse=True)
+
+    return render(
+        request=request,
+        template_name="gogen/leaderboard.html",
+        context={
+            'users_and_scores': users_and_scores,
+            'page_heading': "Gogen Leaderboard",
+        }
+    )
 
 
 def register(request):

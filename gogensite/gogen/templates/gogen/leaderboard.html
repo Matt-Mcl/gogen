@@ -1,0 +1,41 @@
+{% extends navbar_template|default:'registration/logged_in_base.html' %}
+{% block content2 %}
+{% load static %}
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{{ page_heading }}</title>
+    </head>
+    <body>
+        <div class="container">
+            <h2 class="my-4">{{ page_heading }}</h2>
+            <div class="row">
+                <table class="table">
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Ubers Solved</th>
+                        <th>Ultras Solved</th>
+                        <th>Hypers Solved</th>
+                        <th>Total</th>
+                    </tr>
+                    {% for item in users_and_scores %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ item.0 }}</td>
+                            <td>{{ item.1 }}</td>
+                            <td>{{ item.2 }}</td>
+                            <td>{{ item.3 }}</td>
+                            <td>{{ item.4 }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div class="row">
+                <p>All puzzle credit goes to Paul Alan Grosse here: <a href="http://www.puzzles.grosse.is-a-geek.com/uberarchive.html">http://www.puzzles.grosse.is-a-geek.com/uberarchive.html</a></p>
+            </div>
+        </div>
+    </body>
+</html>
+{% endblock %}

@@ -10,43 +10,38 @@ from ..models import *
 
 def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
 
-    next_puzzle = None
-
     # Find the next puzzle the user has not solved
-    puzzle_logs = PuzzleLog.objects.filter(puzzle_type=puzzle_type, user=request.user, puzzle_date__lt=puzzle_date).order_by('-puzzle_date')
-    print(puzzle_logs)
-    last_complete = None
-    last_date = None
-    for pl in puzzle_logs:
-        if last_date is not None:
+    next_puzzle_url = None
+
+    if request.user.is_authenticated:
+        next_puzzle = None
+        puzzle_logs = PuzzleLog.objects.filter(puzzle_type=puzzle_type, user=request.user, puzzle_date__lt=puzzle_date).order_by('-puzzle_date')
+        last_complete = None
+        last_date = puzzle_date
+        for pl in puzzle_logs:
             if pl.puzzle_date != (datetime.strptime(last_date, "%Y%m%d") - timedelta(days=1)).strftime('%Y%m%d'):
                 next_puzzle = (datetime.strptime(last_date, "%Y%m%d") - timedelta(days=1)).strftime('%Y%m%d')
                 break
-        # If incomplete
-        if pl.status == PuzzleLog.STATUS_CHOICES[1][0]:
-            next_puzzle = pl.puzzle_date
-            break
-        # If complete
-        if pl.status == PuzzleLog.STATUS_CHOICES[0][0]:
-            last_complete = pl.puzzle_date
+            # If incomplete
+            if pl.status == PuzzleLog.STATUS_CHOICES[1][0]:
+                next_puzzle = pl.puzzle_date
+                break
+            # If complete
+            if pl.status == PuzzleLog.STATUS_CHOICES[0][0]:
+                last_complete = pl.puzzle_date
 
-        last_date = pl.puzzle_date
-    
-    if next_puzzle is None:
-        if last_complete is None:
-            next_puzzle = (datetime.strptime(puzzle_date, "%Y%m%d") - timedelta(days=1)).strftime('%Y%m%d')
-        else:
-            next_puzzle = (datetime.strptime(last_complete, "%Y%m%d") - timedelta(days=1)).strftime('%Y%m%d')
-    
-    next_puzzle_url = f"/{puzzle_type}{next_puzzle}"
+            last_date = pl.puzzle_date
+        
+        if next_puzzle is None:
+            if last_complete is None:
+                next_puzzle = (datetime.strptime(puzzle_date, "%Y%m%d") - timedelta(days=1)).strftime('%Y%m%d')
+            else:
+                next_puzzle = (datetime.strptime(last_complete, "%Y%m%d") - timedelta(days=1)).strftime('%Y%m%d')
+        
+        next_puzzle_url = f"/{puzzle_type}{next_puzzle}"
 
-    if next_puzzle == "20190119":
-        next_puzzle_url = None
-
-
-    print()
-    print(next_puzzle)
-    print()
+        if next_puzzle == "20190119":
+            next_puzzle_url = None
 
     url = f"http://www.puzzles.grosse.is-a-geek.com/images/gog/puz/{puzzle_type}/{puzzle_type}{puzzle_date}puz.png"
     

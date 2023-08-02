@@ -16,13 +16,24 @@
             }
             .savebutton {
                 background-color: #6c757d;
-                transition: background-color 1s;
+                transition: 0.5s;
             }
             .savebutton.saved {
+                border-color: #27ae60;
                 background-color: #27ae60;
             }
             .savebutton.error {
+                border-color: #dc3545;
                 background-color: #dc3545;
+            }
+            h3 {
+                opacity: 1;
+                animation: fadeOut 1s 5s forwards;
+            }
+            @keyframes fadeOut {
+                to {
+                    opacity: 0;
+                }
             }
         </style>
     </head>
@@ -110,11 +121,9 @@
                         url: actionUrl,
                         data: form.serialize(),
                         success: function(data) {
-                            saveButton.innerText = "Saved";
                             saveButton.classList.add("saved");
                             setTimeout(() => {
                                 saveButton.classList.remove("saved");
-                                saveButton.innerText = "Save";
                             }, 2000);
                             console.log("saved");
                         },

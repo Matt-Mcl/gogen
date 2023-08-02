@@ -79,6 +79,11 @@
                         <button class="btn btn-secondary my-4 savebutton" type="submit" name="save_button">Save</button>
                         <button class="btn btn-secondary my-4" type="button" name="reset_button">Reset</button>
                         <button class="btn btn-danger my-4" type="button" name="ghost_button">Ghost Off</button>
+                        {% if next_puzzle_url != None %}
+                            <a href={{ next_puzzle_url }}><button class="btn btn-secondary my-4" type="button" name="next_button" onclick=saveButton.click();>Next Puzzle ></button></a>
+                        {% else %}
+                            <button class="btn btn-secondary my-4" type="button" name="next_button" disabled>Next Puzzle ></button>
+                        {% endif %}
                     </form>
                     <div class="row">
                         {% if mistake %}

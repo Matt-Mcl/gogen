@@ -8,8 +8,8 @@ import psycopg
 
 from ..models import *
 
-def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
-
+def get_next_puzzle(request, puzzle_type, puzzle_date):
+    
     # Find the next puzzle the user has not solved
     next_puzzle_url = None
 
@@ -42,6 +42,11 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
 
         if next_puzzle == "20190119":
             next_puzzle_url = None
+
+    return next_puzzle_url
+
+
+def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
 
     url = f"http://www.puzzles.grosse.is-a-geek.com/images/gog/puz/{puzzle_type}/{puzzle_type}{puzzle_date}puz.png"
     
@@ -78,7 +83,7 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
             'placeholders': placeholders,
             'page_heading': page_heading,
             'navbar_template': navbar_template,
-            'next_puzzle_url': next_puzzle_url
+            'next_puzzle_url': get_next_puzzle(request, puzzle_type, puzzle_date)
         }
     )
 
@@ -177,6 +182,7 @@ def post_puzzle(request, page_heading):
             'mistake': mistake,
             'complete': complete,
             'page_heading': page_heading,
-            'navbar_template': navbar_template
+            'navbar_template': navbar_template,
+            'next_puzzle_url': get_next_puzzle(request, puzzle_type, puzzle_date)
         }
     )

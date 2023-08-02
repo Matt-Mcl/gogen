@@ -55,6 +55,10 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
         with conn.cursor() as cur:
             cur.execute(f"SELECT * FROM {puzzle_type} WHERE puzzle_url = '{url}';")
             puzzle = cur.fetchone()
+            if puzzle is None:
+                cur.execute(f"SELECT * FROM {puzzle_type} ORDER BY puzzle_name DESC LIMIT 1;")
+                puzzle = cur.fetchone()
+                page_heading = puzzle[0].capitalize()
 
     url = puzzle[1]
     words = puzzle[3]

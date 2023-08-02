@@ -14,6 +14,16 @@
                 top: -5px;
                 position: relative;
             }
+            .savebutton {
+                background-color: #6c757d;
+                transition: background-color 1s;
+            }
+            .savebutton.saved {
+                background-color: #27ae60;
+            }
+            .savebutton.error {
+                background-color: #dc3545;
+            }
         </style>
     </head>
     <body>
@@ -55,7 +65,7 @@
                             {% endfor %}
                         </ul>
                         <button class="btn btn-primary my-4" type="submit" name="submit_button">Submit</button>
-                        <button class="btn btn-secondary my-4" type="submit" name="save_button">Save</button>
+                        <button class="btn btn-secondary my-4 savebutton" type="submit" name="save_button">Save</button>
                         <button class="btn btn-secondary my-4" type="button" name="reset_button">Reset</button>
                         <button class="btn btn-danger my-4" type="button" name="ghost_button">Ghost Off</button>
                     </form>
@@ -88,6 +98,7 @@
                 form.append(`<input type="hidden" name="placeholders" value="${placeholders}" />`);
 
                 var button_name = $("button[type=submit][clicked=true]").attr("name");
+                const saveButton = document.getElementsByName("save_button")[0];
                 // If save button is pressed, do POST without redirect
                 if (button_name === "save_button") {
                     e.preventDefault();
@@ -98,9 +109,27 @@
                         type: "POST",
                         url: actionUrl,
                         data: form.serialize(),
+                        success: function(data) {
+                            saveButton.innerText = "Saved";
+                            saveButton.classList.add("saved");
+                            setTimeout(() => {
+                                saveButton.classList.remove("saved");
+                                saveButton.innerText = "Save";
+                            }, 2000);
+                            console.log("saved");
+                        },
+                        error: function(data) {
+                            saveButton.innerText = "Error";
+                            saveButton.classList.add("error");
+                            setTimeout(() => {
+                                saveButton.classList.remove("error");
+                                saveButton.innerText = "Save";
+                            }, 2000);
+                            console.log("error saving");
+                        }
                     });
 
-                    console.log("saved");
+                    document.querySelector("form[id='letters_form'] input[name='placeholders']").remove();
                 }
             });
 

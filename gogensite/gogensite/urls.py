@@ -25,6 +25,7 @@ urlpatterns = [
     path('login/', auth_views.LoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('leaderboard/', views.leaderboard_view, name='leaderboard'),
+    path('settings/', views.settings_view, name='settings'),
     path('register/', views.register, name='register'),
 
     re_path(r'^(puzzlelist\/)(?P<puzzle_type>uber|hyper|ultra)$', views.puzzle_list_view, name='puzzle_list_view'),

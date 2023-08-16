@@ -29,3 +29,8 @@ class PuzzleLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     UniqueConstraint(fields = ['puzzle_type', 'puzzle_date', 'user'], name = 'unique_puzzle_type_and_date_per_user')
+
+
+class Settings(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    notes_enabled = models.BooleanField(default=True)

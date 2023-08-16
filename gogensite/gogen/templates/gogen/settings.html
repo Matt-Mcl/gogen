@@ -1,0 +1,29 @@
+{% extends navbar_template|default:'registration/logged_in_base.html' %}
+{% block content2 %}
+{% load static %}
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{{ page_heading }}</title>
+    </head>
+    <body>
+        <div class="container">
+            <h2 class="my-4">{{ page_heading }}</h2>
+            <div class="row">
+                <form method="post" id="settings_form">
+                    {% csrf_token %}
+                    <input class="form-check-input" type="checkbox" id="notes_enabled" name="notes_enabled" {% if notes_value %}checked{% endif %}></input>
+                    <label class="form-check-label" for="notes_enabled">Enable notes box</label>
+                    <br>
+                    <br>
+                    <button class="btn btn-primary my-1" type="submit" name="submit_button">Submit</button>
+                </form>
+            </div>
+            <div class="row">
+                <p>All puzzle credit goes to Paul Alan Grosse here: <a href="http://www.puzzles.grosse.is-a-geek.com/uberarchive.html">http://www.puzzles.grosse.is-a-geek.com/uberarchive.html</a></p>
+            </div>
+        </div>
+    </body>
+</html>
+{% endblock %}

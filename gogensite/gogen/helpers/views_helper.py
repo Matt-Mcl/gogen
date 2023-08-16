@@ -76,6 +76,12 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
         if user_puzzle_log.count() > 0:
             board = user_puzzle_log[0].board
             placeholders = user_puzzle_log[0].placeholders
+    
+    if not getattr(request.user, "settings", False):
+        new_settings = Settings(user=request.user)
+        new_settings.save()
+    
+    notes_enabled = request.user.settings.notes_enabled
 
     return render(
         request=request,
@@ -87,7 +93,8 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
             'placeholders': placeholders,
             'page_heading': page_heading,
             'navbar_template': navbar_template,
-            'next_puzzle_url': get_next_puzzle(request, puzzle_type, puzzle_date)
+            'next_puzzle_url': get_next_puzzle(request, puzzle_type, puzzle_date),
+            'notes_enabled': notes_enabled
         }
     )
 

@@ -115,6 +115,33 @@ def leaderboard_view(request):
     )
 
 
+@login_required
+def settings_view(request):
+
+    if not getattr(request.user, "settings", False):
+        new_settings = Settings(user=request.user)
+        new_settings.save()
+
+    user_settings = request.user.settings
+
+    if request.method == "POST":
+        if request.POST.get("notes_enabled") == "on":
+            user_settings.notes_enabled = True
+        else:
+            user_settings.notes_enabled = False
+
+    user_settings.save()
+
+    return render(
+        request=request,
+        template_name="gogen/settings.html",
+        context={
+            'notes_value': user_settings.notes_enabled,
+            'page_heading': "Gogen Settings",
+        }
+    )
+
+
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)

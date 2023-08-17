@@ -6,6 +6,16 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{{ page_heading }}</title>
+        <style>
+            .submitbutton.saved {
+                border-color: #27ae60;
+                background-color: #27ae60;
+            }
+            .submitbutton.error {
+                border-color: #dc3545;
+                background-color: #dc3545;
+            }
+        </style>
     </head>
     <body>
         <div class="container">
@@ -17,7 +27,7 @@
                     <label class="form-check-label" for="notes_enabled">Enable notes box</label>
                     <br>
                     <br>
-                    <button class="btn btn-primary my-1" type="submit" name="submit_button">Submit</button>
+                    <button class="btn btn-primary my-1 submitbutton" type="submit" name="submit_button">Submit</button>
                 </form>
             </div>
             <div class="row">
@@ -25,5 +35,37 @@
             </div>
         </div>
     </body>
+    <script>
+        // When form is submitted, POST
+        $("#settings_form").submit(function(e) {
+            var form = $(this);
+                
+            var actionUrl = form.attr('action');
+            const submitButton = document.getElementsByName("submit_button")[0];
+            e.preventDefault();
+
+            $.ajax({
+                type: "POST",
+                url: actionUrl,
+                data: form.serialize(),
+                success: function(data) {
+                    submitButton.classList.add("saved");
+                    setTimeout(() => {
+                        submitButton.classList.remove("saved");
+                    }, 2000);
+                    console.log("saved");
+                },
+                error: function(data) {
+                    submitButton.innerText = "Error";
+                    submitButton.classList.add("error");
+                    setTimeout(() => {
+                        submitButton.classList.remove("error");
+                        submitButton.innerText = "Submit";
+                    }, 2000);
+                    console.log("error saving");
+                }
+            });
+        });
+    </script>
 </html>
 {% endblock %}

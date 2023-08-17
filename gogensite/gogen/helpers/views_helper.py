@@ -66,6 +66,9 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
     placeholders = [["" for _ in range(5)] for _ in range(5)]
     navbar_template = 'registration/logged_out_base.html'
 
+    default_settings = Settings(user=None)
+    notes_enabled = default_settings.notes_enabled
+
     # If logged in, get the user's puzzlelog data for the given puzzle
     if request.user.id is not None:
         navbar_template = 'registration/logged_in_base.html'
@@ -76,12 +79,14 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
         if user_puzzle_log.count() > 0:
             board = user_puzzle_log[0].board
             placeholders = user_puzzle_log[0].placeholders
-    
-    if not getattr(request.user, "settings", False):
-        new_settings = Settings(user=request.user)
-        new_settings.save()
-    
-    notes_enabled = request.user.settings.notes_enabled
+
+        # If user hasn't got a Settings model attached to them, create one
+        if not getattr(request.user, "settings", False):
+            new_settings = Settings(user=request.user)
+            new_settings.save()
+
+        notes_enabled = request.user.settings.notes_enabled
+
 
     return render(
         request=request,

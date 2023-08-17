@@ -91,7 +91,11 @@
                         {% else %}
                             <button class="btn btn-primary my-1" type="submit" name="submit_button">Submit</button>
                         {% endif %}
-                        <button class="btn btn-secondary my-1 savebutton" type="submit" name="save_button">Save</button>
+                        {% if logged_in %}
+                            <button class="btn btn-secondary my-1 savebutton" type="submit" name="save_button">Save</button>
+                        {% else %}
+                            <button class="btn btn-secondary my-1 savebutton" type="submit" name="save_button" disabled>Save</button>
+                        {% endif %}
                         <button class="btn btn-secondary my-1" type="button" name="reset_button">Reset</button>
                         <button class="btn btn-danger my-1" type="button" name="ghost_button">Ghost</button>
                         {% if next_puzzle_url != None %}
@@ -103,7 +107,7 @@
                 </div>
                 <div class="col-sm-4">
                     {% if notes_enabled %}
-                        <textarea id="notes" placeholder="Notes" style="width: 100%; height: 100%; min-height: 80px"></textarea>
+                        <textarea id="notes_box" placeholder="Notes" style="width: 100%; height: 100%; min-height: 80px">{{ notes }}</textarea>
                     {% endif %}
                 </div>
             </div>
@@ -130,7 +134,7 @@
             </div>
         </div>
         <script>
-            // When submit button is clicked add a "clicked" attribute
+            // When save button is clicked add a "clicked" attribute
             $("form button[type=submit]").click(function() {
                 $("button[type=submit]", $(this).parents("form")).removeAttr("clicked");
                 $(this).attr("clicked", "true");
@@ -139,6 +143,11 @@
             // When form is submitted, POST
             $("#letters_form").submit(function(e) {
                 var form = $(this);
+
+                // Add notes box value as field to form
+                const notesBoxValue = document.getElementById("notes_box").value;
+                form.append(`<input type="hidden" name="notes" value="${notesBoxValue}" />`)
+
                 // Add placeholder values as field to form
                 placeholders = get_placeholders()
                 form.append(`<input type="hidden" name="placeholders" value="${placeholders}" />`);
@@ -172,7 +181,7 @@
                             console.log("error saving");
                         }
                     });
-
+                    document.querySelector("form[id='letters_form'] input[name='notes']").remove();
                     document.querySelector("form[id='letters_form'] input[name='placeholders']").remove();
                 }
             });

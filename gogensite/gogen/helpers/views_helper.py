@@ -8,6 +8,22 @@ import psycopg
 
 from ..models import *
 
+
+def get_user_settings(request):
+
+    user_settings = Settings(user=None)
+
+    if request.user.id is not None:
+        # If user hasn't got a Settings model attached to them, create one
+        if not getattr(request.user, "settings", False):
+            new_settings = Settings(user=request.user)
+            new_settings.save()
+
+        user_settings = request.user.settings
+
+    return user_settings
+
+
 def get_next_puzzle(request, puzzle_type, puzzle_date):
     
     # Find the next puzzle the user has not solved
@@ -63,11 +79,9 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
     url = puzzle[1]
     words = puzzle[3]
     board = puzzle[4]
+    notes = ""
     placeholders = [["" for _ in range(5)] for _ in range(5)]
     navbar_template = 'registration/logged_out_base.html'
-
-    default_settings = Settings(user=None)
-    notes_enabled = default_settings.notes_enabled
 
     # If logged in, get the user's puzzlelog data for the given puzzle
     if request.user.id is not None:
@@ -79,14 +93,9 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
         if user_puzzle_log.count() > 0:
             board = user_puzzle_log[0].board
             placeholders = user_puzzle_log[0].placeholders
+            notes = user_puzzle_log[0].notes
 
-        # If user hasn't got a Settings model attached to them, create one
-        if not getattr(request.user, "settings", False):
-            new_settings = Settings(user=request.user)
-            new_settings.save()
-
-        notes_enabled = request.user.settings.notes_enabled
-
+    user_settings = get_user_settings(request)
 
     return render(
         request=request,
@@ -96,10 +105,12 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
             'words': words,
             'board': board,
             'placeholders': placeholders,
+            'notes': notes,
             'page_heading': page_heading,
             'navbar_template': navbar_template,
+            'logged_in': request.user.id is not None,
             'next_puzzle_url': get_next_puzzle(request, puzzle_type, puzzle_date),
-            'notes_enabled': notes_enabled
+            'notes_enabled': user_settings.notes_enabled
         }
     )
 
@@ -110,6 +121,8 @@ def post_puzzle(request, page_heading):
     placeholders = [["" for _ in range(5)] for _ in range(5)] 
     for i, v in enumerate(post_items.pop()[1].split(',')):
         placeholders[i//5][i%5] = v
+
+    notes = post_items.pop()[1]
 
     # Get URL and date of the puzzle
     url = post_items[1][1]
@@ -155,18 +168,17 @@ def post_puzzle(request, page_heading):
     # If the solution and the users board still match
     if letters == solution_board:
         complete = True
-
         # If logged in save the puzzlelog to the database
         if request.user.id is not None:
             navbar_template = 'registration/logged_in_base.html'
             user_puzzle_log = PuzzleLog.objects.filter(puzzle_type=puzzle_type, puzzle_date=puzzle_date, user=request.user)
             # Create new record for puzzlelog completion if it doesn't exist
             if user_puzzle_log.count() == 0:
-                puzzle_log = PuzzleLog(puzzle_type=puzzle_type, puzzle_date=puzzle_date, status='C', board=letters, placeholders=placeholders, user=request.user)
+                puzzle_log = PuzzleLog(puzzle_type=puzzle_type, puzzle_date=puzzle_date, status='C', board=letters, placeholders=placeholders, notes=notes, user=request.user)
                 puzzle_log.save()
             # If record already exists, mark as completed
             else:
-                user_puzzle_log.update(status='C', board=letters, placeholders=placeholders)
+                user_puzzle_log.update(status='C', board=letters, placeholders=placeholders, notes=notes)
     else:
         mistake = True
         # Loop through each cell in the board and flag user changes with an asterisk
@@ -181,11 +193,13 @@ def post_puzzle(request, page_heading):
             user_puzzle_log = PuzzleLog.objects.filter(puzzle_type=puzzle_type, puzzle_date=puzzle_date, user=request.user)
             # Create new record for incomplete puzzlelog if it doesn't exist
             if user_puzzle_log.count() == 0:
-                puzzle_log = PuzzleLog(puzzle_type=puzzle_type, puzzle_date=puzzle_date, status='I', board=letters, placeholders=placeholders, user=request.user)
+                puzzle_log = PuzzleLog(puzzle_type=puzzle_type, puzzle_date=puzzle_date, status='I', board=letters, placeholders=placeholders, notes=notes, user=request.user)
                 puzzle_log.save()
             # If record already exists, updates the board with the new letters the user put in
             else:
-                user_puzzle_log.update(board=letters, placeholders=placeholders)
+                user_puzzle_log.update(board=letters, placeholders=placeholders, notes=notes)
+
+    user_settings = get_user_settings(request)
 
     return render(
         request=request,
@@ -195,10 +209,13 @@ def post_puzzle(request, page_heading):
             'words': words,
             'board': letters,
             'placeholders': placeholders,
+            'notes': notes,
             'mistake': mistake,
             'complete': complete,
             'page_heading': page_heading,
             'navbar_template': navbar_template,
-            'next_puzzle_url': get_next_puzzle(request, puzzle_type, puzzle_date)
+            'logged_in': request.user.id is not None,
+            'next_puzzle_url': get_next_puzzle(request, puzzle_type, puzzle_date),
+            'notes_enabled': user_settings.notes_enabled
         }
     )

@@ -25,6 +25,7 @@ class PuzzleLog(models.Model):
         ),
         size=5,
     )
+    notes = models.CharField(max_length=1024, blank=True)
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 

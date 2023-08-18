@@ -197,7 +197,14 @@ def post_puzzle(request, page_heading):
                 puzzle_log.save()
             # If record already exists, updates the board with the new letters the user put in
             else:
-                user_puzzle_log.update(board=letters, placeholders=placeholders, notes=notes)
+                if user_puzzle_log[0].status == 'C':
+                    mistake = False
+                    complete = True
+                    placeholders = user_puzzle_log[0].placeholders
+                    letters = user_puzzle_log[0].board
+                    notes = user_puzzle_log[0].notes
+                else:
+                    user_puzzle_log.update(board=letters, placeholders=placeholders, notes=notes)
 
     user_settings = get_user_settings(request)
 

@@ -144,8 +144,13 @@
             $("#letters_form").submit(function(e) {
                 var form = $(this);
 
+                let notesBoxValue = "";
+
+                if ("{{notes_enabled}}" === "True") {
+                    notesBoxValue = document.getElementById("notes_box").value;
+                }
+
                 // Add notes box value as field to form
-                const notesBoxValue = document.getElementById("notes_box").value;
                 form.append(`<input type="hidden" name="notes" value="${notesBoxValue}" />`)
 
                 // Add placeholder values as field to form

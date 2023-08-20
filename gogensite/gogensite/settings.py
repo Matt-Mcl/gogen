@@ -10,8 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
-from pathlib import Path
 import os
+import sys
+from pathlib import Path
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -28,7 +29,7 @@ try:
 except KeyError as e:
     raise RuntimeError("Could not find a SECRET_KEY in environment") from e
 
-PG_CONNECTION = f"dbname={os.getenv('PG_DBNAME')} user={os.getenv('PG_USER')} password={os.getenv('PG_PASSWORD')}"
+PG_CONNECTION = f"dbname={os.getenv('PG_PUZZLE_DBNAME')} user={os.getenv('PG_PUZZLE_USER')} password={os.getenv('PG_PUZZLE_PASSWORD')}"
 
 DEBUG = False
 
@@ -86,15 +87,28 @@ WSGI_APPLICATION = 'gogensite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'OPTIONS': {
-            'service': 'gogensite_service',
-            'passfile': '/home/ubuntu/.pgpass',
-        },
+DATABASES = {}
+if 'test' in sys.argv:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('PG_TEST_DBNAME'),
+            'USER': os.getenv('PG_USER'),
+            'PASSWORD': os.getenv('PG_PASSWORD'),
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'OPTIONS': {
+                'service': 'gogensite_service',
+                'passfile': '/home/ubuntu/.pgpass',
+            },
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators

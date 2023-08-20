@@ -10,8 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
-from pathlib import Path
 import os
+import sys
+from pathlib import Path
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -86,7 +87,7 @@ WSGI_APPLICATION = 'gogensite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-import sys
+DATABASES = {}
 if 'test' in sys.argv:
     DATABASES = {
         'default': {
@@ -102,11 +103,10 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('PG_DEV_DBNAME'),
-            'USER': os.getenv('PG_USER'),
-            'PASSWORD': os.getenv('PG_PASSWORD'),
-            'HOST': 'localhost',
-            'PORT': '5432',
+            'OPTIONS': {
+                'service': 'gogensite_service_dev',
+                'passfile': '/home/ubuntu/.pgpass',
+            },
         }
     }
 

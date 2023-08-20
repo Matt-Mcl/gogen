@@ -6,6 +6,6 @@ fi
 
 source "../venv/bin/activate"
 
-export DJANGO_SETTINGS_MODULE=gogensite.dev_settings
+export DJANGO_SETTINGS_MODULE=gogensite.settings
 
 python3 manage.py test

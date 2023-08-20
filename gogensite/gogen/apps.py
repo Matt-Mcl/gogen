@@ -1,11 +1,13 @@
 from django.apps import AppConfig
-
+import sys
 
 class GogenConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'gogen'
 
     def ready(self):
+        if 'test' in sys.argv:
+            return
         from .models import PuzzleLog
         incomplete_puzzle_logs = PuzzleLog.objects.filter(status=PuzzleLog.STATUS_CHOICES[1][0])
 

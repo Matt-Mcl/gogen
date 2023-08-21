@@ -22,5 +22,21 @@
             "name": "Every letter, three per line, two for vowels",
             "template": "A: \t\tE: \nI: \t\tO: \nU: \t\tY: \nB: \tC: \tD: \nF: \tG: \tH: \nJ: \tK: \tL: \nM: \tN: \tP: \nQ: \tR: \tS: \nT: \tV: \tW: \nX: "
         }
+    },
+    {
+        "model": "gogen.notetemplate",
+        "pk": 4,
+        "fields": {
+            "name": "Just vowels, one per line",
+            "template": "A: \nE: \nI: \nO: \nU: \nY: \n"
+        }
+    },
+    {
+        "model": "gogen.notetemplate",
+        "pk": 5,
+        "fields": {
+            "name": "Just vowels, two per line",
+            "template": "A: \t\tE: \nI: \t\tO: \nU: \t\tY: \n"
+        }
     }
 ]

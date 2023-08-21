@@ -35,3 +35,9 @@ class PuzzleLog(models.Model):
 class Settings(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     notes_enabled = models.BooleanField(default=True)
+    preset_notes = models.ForeignKey('NoteTemplate', on_delete=models.CASCADE, null=True, blank=True)
+
+
+class NoteTemplate(models.Model):
+    name = models.CharField(max_length=255)
+    template = models.CharField(max_length=1024)

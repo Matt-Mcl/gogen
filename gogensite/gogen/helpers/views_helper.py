@@ -97,6 +97,10 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
 
     user_settings = get_user_settings(request)
 
+    # If user has a notes preset and puzzle hasn't been attempted yet, set notes as the preset
+    if user_settings.preset_notes is not None and notes == "":
+        notes = user_settings.preset_notes.template
+
     return render(
         request=request,
         template_name='gogen/puzzle.html',
@@ -110,7 +114,8 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
             'navbar_template': navbar_template,
             'logged_in': request.user.id is not None,
             'next_puzzle_url': get_next_puzzle(request, puzzle_type, puzzle_date),
-            'notes_enabled': user_settings.notes_enabled
+            'notes_enabled': user_settings.notes_enabled,
+            'preset_notes': user_settings.preset_notes
         }
     )
 

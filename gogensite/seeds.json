@@ -1,0 +1,26 @@
+[
+    {
+        "model": "gogen.notetemplate",
+        "pk": 1,
+        "fields": {
+            "name": "Every letter, one per lines",
+            "template": "A: \nE: \nI: \nO: \nU: \nY: \nB: \nC: \nD: \nF: \nG: \nH: \nJ: \nK: \nL: \nM: \nN: \nP: \nQ: \nR: \nS: \nT: \nV: \nW: \nX: "
+        }
+    },
+    {
+        "model": "gogen.notetemplate",
+        "pk": 2,
+        "fields": {
+            "name": "Every letter, two per line",
+            "template": "A: \t\tE: \nI: \t\tO: \nU: \t\tY: \nB: \t\tC: \nD: \t\tF: \nG: \t\tH: \nJ: \t\tK: \nL: \t\tM: \nN: \t\tP: \nQ: \t\tR: \nS: \t\tT: \nV: \t\tW: \nX: "
+        }
+    },
+    {
+        "model": "gogen.notetemplate",
+        "pk": 3,
+        "fields": {
+            "name": "Every letter, three per line, two for vowels",
+            "template": "A: \t\tE: \nI: \t\tO: \nU: \t\tY: \nB: \tC: \tD: \nF: \tG: \tH: \nJ: \tK: \tL: \nM: \tN: \tP: \nQ: \tR: \tS: \nT: \tV: \tW: \nX: "
+        }
+    }
+]

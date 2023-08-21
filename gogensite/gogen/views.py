@@ -129,14 +129,27 @@ def settings_view(request):
             user_settings.notes_enabled = True
         else:
             user_settings.notes_enabled = False
+        
+        # If a notes preset is selected
+        notes_preset = [x for x in request.POST.keys() if "notes_preset" in x]
+
+        if notes_preset:
+            notes_preset = notes_preset[0]
+            user_settings.preset_notes = NoteTemplate.objects.get(id=notes_preset[-1])
+        else:
+            user_settings.preset_notes = None
 
     user_settings.save()
+
+    presets = NoteTemplate.objects.all()
 
     return render(
         request=request,
         template_name="gogen/settings.html",
         context={
             'notes_value': user_settings.notes_enabled,
+            'presets': presets,
+            'selected_preset': user_settings.preset_notes,
             'page_heading': "Gogen Settings",
         }
     )

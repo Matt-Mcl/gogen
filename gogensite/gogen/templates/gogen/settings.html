@@ -26,6 +26,19 @@
                     <input class="form-check-input" type="checkbox" id="notes_enabled" name="notes_enabled" {% if notes_value %}checked{% endif %}></input>
                     <label class="form-check-label" for="notes_enabled">Enable notes box</label>
                     <br>
+                    <ul style="list-style-type: none;">
+                        <p style="display: inline;">Presets:</p>
+                        <li>
+                            <input class="form-check-input" type="radio" data-group="notes_preset_group" id="none_button" name="notes_none"  {% if selected_preset.id == None %}checked{% endif %}></input>
+                            <label class="form-check-label" for="none_button">None</label>
+                        </li>
+                        {% for n in presets %}
+                            <li>
+                                <input class="form-check-input" type="radio" data-group="notes_preset_group" id="notes_preset_{{ n.id }}" name="notes_preset_{{ n.id }}" {% if selected_preset.id == n.id %}checked{% endif %}></input>
+                                <label class="form-check-label" for="notes_preset_{{ n.id }}">{{ n.name }}</label>
+                            </li>
+                        {% endfor %}
+                    </ul>
                     <br>
                     <button class="btn btn-primary my-1 submitbutton" type="submit" name="submit_button">Submit</button>
                 </form>
@@ -69,6 +82,15 @@
                 }
             });
         });
+
+        $('input[type="radio"]').on('click', function() {
+            // Get the group name from the data-group attribute
+            var groupName = $(this).data('group');
+            
+            // Deselect all other radio inputs in the same group
+            $('input[type="radio"][data-group="' + groupName + '"]').not(this).prop('checked', false);
+        });
+
     </script>
 </html>
 {% endblock %}

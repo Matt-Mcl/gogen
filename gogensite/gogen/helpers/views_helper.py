@@ -24,6 +24,19 @@ def get_user_settings(request):
     return user_settings
 
 
+def get_puzzle_log(puzzle_type, puzzle_date, request, notes, user_settings):
+
+    user_puzzle_log = PuzzleLog.objects.filter(puzzle_type=puzzle_type, puzzle_date=puzzle_date, user=request.user)
+
+    # If notes are currently disabled, update variable to use what's in the database
+    # Prevents notes being removed when notes are disabled
+    if not user_settings.notes_enabled:
+        if user_puzzle_log.count() > 0:
+            notes = user_puzzle_log[0].notes
+    
+    return user_puzzle_log, notes
+
+
 def get_next_puzzle(request, puzzle_type, puzzle_date):
     
     # Find the next puzzle the user has not solved
@@ -128,6 +141,7 @@ def post_puzzle(request, page_heading):
         placeholders[i//5][i%5] = v
 
     notes = post_items.pop()[1]
+    user_settings = get_user_settings(request)
 
     # Get URL and date of the puzzle
     url = post_items[1][1]
@@ -168,7 +182,7 @@ def post_puzzle(request, page_heading):
     # Copy the letters the user put in over the solution board
     # If the letters are wrong, their board will now be different to the solution board
     for item in post_items[2:]:
-        letters[int(item[0][0])][int(item[0][1])] = item[1]
+        letters[int(item[0][0])][int(item[0][1])] = item[1][:1].upper()
 
     # If the solution and the users board still match
     if letters == solution_board:
@@ -176,7 +190,7 @@ def post_puzzle(request, page_heading):
         # If logged in save the puzzlelog to the database
         if request.user.id is not None:
             navbar_template = 'registration/logged_in_base.html'
-            user_puzzle_log = PuzzleLog.objects.filter(puzzle_type=puzzle_type, puzzle_date=puzzle_date, user=request.user)
+            user_puzzle_log, notes = get_puzzle_log(puzzle_type, puzzle_date, request, notes, user_settings)
             # Create new record for puzzlelog completion if it doesn't exist
             if user_puzzle_log.count() == 0:
                 puzzle_log = PuzzleLog(puzzle_type=puzzle_type, puzzle_date=puzzle_date, status='C', board=letters, placeholders=placeholders, notes=notes, user=request.user)
@@ -195,7 +209,7 @@ def post_puzzle(request, page_heading):
         # If logged in save the puzzlelog to the database
         if request.user.id is not None:
             navbar_template = 'registration/logged_in_base.html'
-            user_puzzle_log = PuzzleLog.objects.filter(puzzle_type=puzzle_type, puzzle_date=puzzle_date, user=request.user)
+            user_puzzle_log, notes = get_puzzle_log(puzzle_type, puzzle_date, request, notes, user_settings)
             # Create new record for incomplete puzzlelog if it doesn't exist
             if user_puzzle_log.count() == 0:
                 puzzle_log = PuzzleLog(puzzle_type=puzzle_type, puzzle_date=puzzle_date, status='I', board=letters, placeholders=placeholders, notes=notes, user=request.user)
@@ -210,8 +224,6 @@ def post_puzzle(request, page_heading):
                     notes = user_puzzle_log[0].notes
                 else:
                     user_puzzle_log.update(board=letters, placeholders=placeholders, notes=notes)
-
-    user_settings = get_user_settings(request)
 
     return render(
         request=request,

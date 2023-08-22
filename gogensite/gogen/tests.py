@@ -76,13 +76,13 @@ class PuzzleLogTestCase(TestCase):
             board=[['V', 'C', 'X', 'H', 'W'], ['F', 'I', 'B', 'O', 'R'], ['T', 'E', 'D', 'Y', 'J'], ['K', 'U', 'G', 'A', 'M'], ['S', 'L', 'Q', 'N', 'P']], 
             placeholders = [['', '', '', '', ''], ['', '', '', '', ''], ['', '', '', '', ''], ['', '', '', '', ''], ['', '', '', '', '']],
             status='C',
-            notes='test notes with more'
+            notes="test notes with more"
         )
 
         self.assertEqual(user_puzzle_log[0].board, [['V', 'C', 'X', 'H', 'W'], ['F', 'I', 'B', 'O', 'R'], ['T', 'E', 'D', 'Y', 'J'], ['K', 'U', 'G', 'A', 'M'], ['S', 'L', 'Q', 'N', 'P']])
         self.assertEqual(user_puzzle_log[0].placeholders, [['', '', '', '', ''], ['', '', '', '', ''], ['', '', '', '', ''], ['', '', '', '', ''], ['', '', '', '', '']])
         self.assertEqual(user_puzzle_log[0].status, 'C')
-        self.assertEqual(user_puzzle_log[0].notes, 'test notes with more')
+        self.assertEqual(user_puzzle_log[0].notes, "test notes with more")
 
 
 class DailyUberCase(StaticLiveServerTestCase):
@@ -91,7 +91,7 @@ class DailyUberCase(StaticLiveServerTestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.factory = RequestFactory()
-        service = Service('/usr/bin/chromedriver')
+        service = Service("/usr/bin/chromedriver")
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
@@ -113,7 +113,7 @@ class DailyUberCase(StaticLiveServerTestCase):
     def test_can_unsucessfully_complete_daily_uber(self): 
         self.selenium.get(f"{self.live_server_url}/")
         letter_input = self.selenium.find_element(By.NAME, "01_letter")
-        letter_input.send_keys("Z")
+        letter_input.send_keys('Z')
         submit_button = self.selenium.find_element(By.NAME, "submit_button")
         submit_button.click()
         status_heading = self.selenium.find_element(By.CLASS_NAME, "fadingHeading").text
@@ -132,10 +132,57 @@ class DailyUberCase(StaticLiveServerTestCase):
 
         # Go through each input box and put in correct letter
         for item in letter_input:
-            item.send_keys(solution_board[int(item.get_attribute('name')[0])][int(item.get_attribute('name')[1])])
+            item.send_keys(solution_board[int(item.get_attribute("name")[0])][int(item.get_attribute("name")[1])])
 
         submit_button = self.selenium.find_element(By.NAME, "submit_button")
         submit_button.click()
         status_heading = self.selenium.find_element(By.CLASS_NAME, "fadingHeading").text
 
         self.assertEqual(status_heading, "Correct!")
+
+
+class PuzzleFunctionalityCase(StaticLiveServerTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.factory = RequestFactory()
+        service = Service("/usr/bin/chromedriver")
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--no-sandbox")
+        cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
+        cls.selenium.implicitly_wait(10)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.selenium.quit()
+        super().tearDownClass()
+
+    def test_can_add_placeholder(self):
+        self.selenium.get(f"{self.live_server_url}/")
+        ghost_button = self.selenium.find_element(By.NAME, "ghost_button")
+        ghost_button.click()
+        letter_input = self.selenium.find_element(By.NAME, "01_letter")
+        letter_input.send_keys('Z')
+        placeholder_value = letter_input.get_attribute("placeholder")
+
+        self.assertEqual(placeholder_value, 'Z')
+
+    def test_can_reset(self):
+        self.selenium.get(f"{self.live_server_url}/")
+        letter_input = self.selenium.find_element(By.NAME, "01_letter")
+        letter_input.send_keys('Z')
+        notes_input = self.selenium.find_element(By.ID, "notes_box")
+        notes_input.send_keys("test notes")
+        reset_button = self.selenium.find_element(By.NAME, "reset_button")
+        reset_button.click()
+        alert = self.selenium.switch_to.alert
+
+        self.assertEqual(alert.text, "Are you sure you want to reset?")
+
+        alert.accept()
+
+        self.assertEqual(letter_input.get_attribute("value"), '')
+        self.assertEqual(notes_input.get_attribute("value"), '')

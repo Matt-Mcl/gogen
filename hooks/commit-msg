@@ -1,0 +1,20 @@
+#!/bin/bash
+
+echo "Running pre-commit hook"
+echo "Running tests.."
+
+source "./venv/bin/activate"
+
+cd gogensite
+
+export DJANGO_SETTINGS_MODULE=gogensite.settings
+
+python3 manage.py test
+
+if [ $? = 1 ]; then
+    echo "Tests failed."
+    exit 1
+fi
+
+echo "Tests passed."
+echo "Committing.."

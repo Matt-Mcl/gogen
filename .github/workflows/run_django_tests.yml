@@ -11,10 +11,6 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.KEY }}
         script: |
-          export DJANGO_SETTINGS_MODULE=gogensite.settings
-          cd gogen/prod-gogen-app
-          source venv/bin/activate
-          cd gogensite
+          cd gogen/prod-gogen-app/gogensite
           git pull
-          python3 manage.py migrate
-          python3 manage.py test
+          bash run_prod_tests.sh

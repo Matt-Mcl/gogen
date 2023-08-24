@@ -1,5 +1,7 @@
 #!/bin/bash
 
+git config core.hooksPath hooks
+
 if [ ! -d venv ]; then
     echo "venv not present - creating" 
     python3 -m venv venv

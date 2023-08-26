@@ -76,11 +76,11 @@
                                 <tr>
                                     {% for board_cell, placeholder_cell in row|tuplezip %}
                                         {% if board_cell|make_list|first == "*" %}
-                                            <td class="text-center"><input type="text" class="form-control" maxlength="1" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}_letter" value="{{ board_cell|slice:"1:" }}" oninput="this.value = this.value.toUpperCase()" placeholder={{ placeholder_cell }}></input></td>
+                                            <td class="text-center"><input type="text" class="form-control" maxlength="1" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}_board_letter" value="{{ board_cell|slice:"1:" }}" oninput="this.value = this.value.toUpperCase()" placeholder={{ placeholder_cell }}></input></td>
                                         {% elif board_cell %}
-                                            <td class="text-center" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}_letter" value="{{board_cell}}">{{ board_cell }}</td>
+                                            <td class="text-center" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}_board_letter" value="{{board_cell}}">{{ board_cell }}</td>
                                         {% else %}
-                                            <td class="text-center"><input type="text" class="form-control" maxlength="1" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}_letter" oninput="this.value = this.value.toUpperCase()" placeholder={{ placeholder_cell }}></input></td>
+                                            <td class="text-center"><input type="text" class="form-control" maxlength="1" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}_board_letter" oninput="this.value = this.value.toUpperCase()" placeholder={{ placeholder_cell }}></input></td>
                                         {% endif %}
                                     {% endfor %}
                                 </tr>
@@ -115,7 +115,7 @@
                 <ul class="list-group list-group-horizontal" style="display: flex; flex-wrap: wrap; flex-direction: row; max-width: 1000px;">
                     {% for w in words %}
                         <li class="list-group-item border-0" id="{{ w }}_word" style="padding: 5px 15px 5px 15px;">
-                            <b>{{ w }}</b>
+                            <b name="{{ l }}_word">{{ w }}</b>
                         </li>
                     {% endfor %}
                 </ul>
@@ -124,7 +124,7 @@
                 <ul class="list-group list-group-horizontal" style="display: flex; flex-wrap: wrap; flex-direction: row; max-width: 1000px; line-height: 0;">
                     {% for l in "ABCDEFGHIJKLMNOPQRSTUVWXY" %}
                         <li class="list-group-item border-0" id="{{ l }}_remaining_letter" style="max-width: 0;">
-                            <p>{{ l }}</p>
+                            <p name="{{ l }}_remaining_letter">{{ l }}</p>
                         </li>
                     {% endfor %}
                 </ul>
@@ -216,7 +216,7 @@
                 }
             });
 
-            $('[name$="_letter"]').each(function() {
+            $('[name$="_board_letter"]').each(function() {
                 var elem = $(this);
             
                 // Save current value of element
@@ -240,7 +240,7 @@
                 let remaining_words = document.querySelectorAll('[id$="_word"]');
                 let valid_words = Array.from(remaining_words, item => item.innerText);
 
-                let form_letters = document.querySelectorAll('[name$="_letter"]');
+                let form_letters = document.querySelectorAll('[name$="_board_letter"]');
                 form_letters = Array.from(form_letters, item => {
                     if (item.innerText === "") {
                         return item.value;
@@ -325,9 +325,9 @@
                 }
                 
                 for (const word of remaining_words) {
-                    let word_style = `<b>${word.innerText}</b>`;
+                    let word_style = `<b name=${word.innerText}_word>${word.innerText}</b>`;
                     if (result.has(word.innerText)) {
-                        word_style = `<b style="text-decoration: line-through; color: #D3D3D3;">${word.innerText}</b>`;
+                        word_style = `<b name=${word.innerText}_word style="text-decoration: line-through; color: rgb(211, 211, 211);">${word.innerText}</b>`;
                     }
                     word.innerHTML = `${word_style}`;
                 }
@@ -343,7 +343,7 @@
                     item.getElementsByTagName('p')[0].style = ''
                 }
                 // Get letters in form
-                let form_letters = document.querySelectorAll('[name$="_letter"]');
+                let form_letters = document.querySelectorAll('[name$="_board_letter"]');
                 let changed_letters = [];
 
                 for (const letter of form_letters) {
@@ -360,11 +360,11 @@
 
                         if (changed_letters.includes(value)) {
                             // If letter has been found twice in grid, make it red
-                            letter_style = `<p style="color: #FF0000; display: inline-block;">${value}</p>`;
+                            letter_style = `<p name=${value}_remaining_letter style="color: #FF0000; display: inline-block;">${value}</p>`;
                             box_colour = '#FF4444';
                         } else {
                             // Otherwise make it grey
-                            letter_style = `<p style="text-decoration: line-through; color: #D3D3D3;">${value}</p>`;
+                            letter_style = `<p name=${value}_remaining_letter style="text-decoration: line-through; color: rgb(211, 211, 211);">${value}</p>`;
                             box_colour = '';
                         }
 
@@ -405,7 +405,7 @@
 
             function get_placeholders() {
                 let placeholders = [];
-                let form_letters = document.querySelectorAll('[name$="_letter"]');
+                let form_letters = document.querySelectorAll('[name$="_board_letter"]');
                 for (let letter of form_letters) {
                     value = letter.getAttribute("placeholder");
 

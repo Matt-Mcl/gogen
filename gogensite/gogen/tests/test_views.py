@@ -99,7 +99,7 @@ class DailyUberCase(StaticLiveServerTestCase):
         
     def test_can_unsucessfully_complete_daily_uber(self): 
         self.selenium.get(f"{self.live_server_url}/")
-        letter_input = self.selenium.find_element(By.NAME, "01_letter")
+        letter_input = self.selenium.find_element(By.NAME, "01_board_letter")
         letter_input.send_keys('A')
         submit_button = self.selenium.find_element(By.NAME, "submit_button")
         submit_button.click()
@@ -150,7 +150,7 @@ class PuzzlePageLoggedOutCase(StaticLiveServerTestCase):
         self.selenium.get(f"{self.live_server_url}/")
         ghost_button = self.selenium.find_element(By.NAME, "ghost_button")
         ghost_button.click()
-        placeholder_input = self.selenium.find_element(By.NAME, "01_letter")
+        placeholder_input = self.selenium.find_element(By.NAME, "01_board_letter")
         placeholder_input.send_keys('A')
         placeholder_value = placeholder_input.get_attribute("placeholder")
 
@@ -158,7 +158,7 @@ class PuzzlePageLoggedOutCase(StaticLiveServerTestCase):
 
     def test_can_reset(self):
         self.selenium.get(f"{self.live_server_url}/")
-        letter_input = self.selenium.find_element(By.NAME, "01_letter")
+        letter_input = self.selenium.find_element(By.NAME, "01_board_letter")
         letter_input.send_keys('A')
         notes_input = self.selenium.find_element(By.ID, "notes_box")
         notes_input.send_keys("test notes")
@@ -172,12 +172,6 @@ class PuzzlePageLoggedOutCase(StaticLiveServerTestCase):
 
         self.assertEqual(letter_input.get_attribute("value"), '')
         self.assertEqual(notes_input.get_attribute("value"), '')
-
-    def test_letters_cross_off(self):
-        pass
-
-    def test_words_cross_off(self):
-        pass
 
 
 class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
@@ -200,22 +194,21 @@ class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
 
     def test_can_save_and_load(self):
         login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
-        
         self.selenium.get(f"{self.live_server_url}/uber20190120")
-        letter_input = self.selenium.find_element(By.NAME, "01_letter")
+        letter_input = self.selenium.find_element(By.NAME, "01_board_letter")
         letter_input.send_keys('A')
         notes_input = self.selenium.find_element(By.ID, "notes_box")
         notes_input.send_keys("test notes")
         ghost_button = self.selenium.find_element(By.NAME, "ghost_button")
         ghost_button.click()
-        placeholder_input = self.selenium.find_element(By.NAME, "03_letter")
+        placeholder_input = self.selenium.find_element(By.NAME, "03_board_letter")
         placeholder_input.send_keys('B')
         save_button = self.selenium.find_element(By.NAME, "save_button")
         save_button.click()
 
         self.selenium.get(f"{self.live_server_url}/uber20190120")
-        letter_input = self.selenium.find_element(By.NAME, "01_letter")
-        placeholder_input = self.selenium.find_element(By.NAME, "03_letter")
+        letter_input = self.selenium.find_element(By.NAME, "01_board_letter")
+        placeholder_input = self.selenium.find_element(By.NAME, "03_board_letter")
         notes_input = self.selenium.find_element(By.ID, "notes_box")
 
         self.assertEqual(letter_input.get_attribute("value"), "A")
@@ -233,6 +226,31 @@ class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
         next_button = self.selenium.find_element(By.NAME, "next_button")
         next_button.click()
         self.assertEqual(self.selenium.title, "Uber20190120")
+
+    def test_letters_cross_off(self):
+        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+        self.selenium.get(f"{self.live_server_url}/uber20190120")
+        letter_input = self.selenium.find_element(By.NAME, "01_board_letter")
+        letter_input.send_keys('A')
+        a_remaining_letter = self.selenium.find_element(By.NAME, "A_remaining_letter")
+        self.assertEqual(a_remaining_letter.get_attribute("style"), "text-decoration: line-through; color: rgb(211, 211, 211);")
+
+    def test_words_cross_off(self):
+        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+        self.selenium.get(f"{self.live_server_url}/uber20190120")
+        letter_input = self.selenium.find_element(By.NAME, "10_board_letter")
+        letter_input.send_keys('B')
+        letter_input = self.selenium.find_element(By.NAME, "11_board_letter")
+        letter_input.send_keys('E')
+        letter_input = self.selenium.find_element(By.NAME, "12_board_letter")
+        letter_input.send_keys('G')
+        letter_input = self.selenium.find_element(By.NAME, "13_board_letter")
+        letter_input.send_keys('A')
+        letter_input = self.selenium.find_element(By.NAME, "14_board_letter")
+        letter_input.send_keys('N')
+
+        began_word = self.selenium.find_element(By.NAME, "BEGAN_word")
+        self.assertEqual(began_word.get_attribute("style"), "text-decoration: line-through; color: rgb(211, 211, 211);")
 
 
 class SettingsPageCase(StaticLiveServerTestCase):

@@ -7,6 +7,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.webdriver.support.wait import WebDriverWait
 from ..helpers import test_helper
 
 
@@ -31,6 +32,7 @@ class RegisterLoginPageCase(StaticLiveServerTestCase):
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--window-size=1920,1080")
         cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
         cls.selenium.implicitly_wait(10)
 
@@ -82,6 +84,7 @@ class DailyUberCase(StaticLiveServerTestCase):
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--window-size=1920,1080")
         cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
         cls.selenium.implicitly_wait(10)
 
@@ -138,6 +141,7 @@ class PuzzlePageLoggedOutCase(StaticLiveServerTestCase):
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--window-size=1920,1080")
         cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
         cls.selenium.implicitly_wait(10)
 
@@ -184,6 +188,7 @@ class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--window-size=1920,1080")
         cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
         cls.selenium.implicitly_wait(10)
 
@@ -255,21 +260,177 @@ class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
 
 class SettingsPageCase(StaticLiveServerTestCase):
 
-    # test that settings page loads
-    # test that submit button works and return succesful response in each case.
-    # test each settings does what it should.
-    pass
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        service = Service("/usr/bin/chromedriver")
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--window-size=1920,1080")
+        cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
+        cls.selenium.implicitly_wait(10)
+        NoteTemplate.objects.create(name="test name", template="test template")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.selenium.quit()
+        super().tearDownClass()
+
+    def test_can_load_settings(self):
+        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+        self.selenium.get(f"{self.live_server_url}/settings")
+        self.assertEqual(self.selenium.title, "Gogen Settings")
+
+    def test_can_change_settings(self):
+        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+        self.selenium.get(f"{self.live_server_url}/settings")
+
+        test_user = User.objects.get(username="testuser")
+        self.assertEqual(test_user.settings.notes_enabled, True)
+        notes_input = self.selenium.find_element(By.NAME, "notes_enabled")
+        notes_input.click()
+
+        submit_button = self.selenium.find_element(By.NAME, "submit_button")
+        submit_button.click()
+        self.selenium.get(f"{self.live_server_url}/settings")
+        
+        test_user = User.objects.get(username="testuser")
+        self.assertEqual(test_user.settings.notes_enabled, False)
+
+    def test_can_change_notes_preset(self):
+        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+        self.selenium.get(f"{self.live_server_url}/settings")
+
+        test_user = User.objects.get(username="testuser")
+        self.assertEqual(test_user.settings.preset_notes, None)
+        notes_input = self.selenium.find_element(By.NAME, "notes_preset_1")
+        notes_input.click()
+
+        submit_button = self.selenium.find_element(By.NAME, "submit_button")
+        wait = WebDriverWait(self.selenium, timeout=5)
+        submit_button.click()
+
+        wait.until(lambda _ : "saved" in submit_button.get_attribute("class"))
+
+        test_user = User.objects.get(username="testuser")
+        self.assertEqual(test_user.settings.preset_notes.name, "test name")
+        self.assertEqual(test_user.settings.preset_notes.template, "test template")
+        
+        self.selenium.get(f"{self.live_server_url}/uber20190120")
+        notes_input = self.selenium.find_element(By.ID, "notes_box")
+
+        self.assertEqual(notes_input.get_attribute("value"), "test template")
 
 
 class LeaderboardPageCase(StaticLiveServerTestCase):
 
-    # test that leaderboard loads
-    # test that leaderboard is sorted correctly
-    pass
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        service = Service("/usr/bin/chromedriver")
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--window-size=1920,1080")
+        cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
+        cls.selenium.implicitly_wait(10)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.selenium.quit()
+        super().tearDownClass()
+
+    def test_can_load_leaderboard(self):
+        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+        self.selenium.get(f"{self.live_server_url}/leaderboard")
+        self.assertEqual(self.selenium.title, "Gogen Leaderboard")
+
+    def test_is_leaderboard_sorted(self):
+        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+
+        test_user = User.objects.get(username="testuser")
+
+        PuzzleLog.objects.create(puzzle_type="uber", puzzle_date="20190120", board=[], placeholders=[], status="C", user=test_user)
+        
+        test_user2 = User.objects.create_user(username="testuser2", password="testpassword")
+        PuzzleLog.objects.create(puzzle_type="uber", puzzle_date="20190120", board=[], placeholders=[], status="C", user=test_user2)
+        PuzzleLog.objects.create(puzzle_type="uber", puzzle_date="20190121", board=[], placeholders=[], status="C", user=test_user2)
+
+        self.selenium.get(f"{self.live_server_url}/leaderboard")
+        self.assertEqual(self.selenium.title, "Gogen Leaderboard")
+
+        leaderboard_table = self.selenium.find_element(By.NAME, "leaderboard_table")
+        table_rows = leaderboard_table.find_elements(By.TAG_NAME, "tr")
+
+        self.assertEqual(table_rows[1].find_elements(By.TAG_NAME, "td")[1].text, "testuser2")
+        self.assertEqual(table_rows[2].find_elements(By.TAG_NAME, "td")[1].text, "testuser")
 
 
 class PuzzleListPageCase(StaticLiveServerTestCase):
 
-    # test that puzzle lists load
-    # test that puzzle lists are sorted correctly
-    pass
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        service = Service("/usr/bin/chromedriver")
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--window-size=1920,1080")
+        cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
+        cls.selenium.implicitly_wait(10)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.selenium.quit()
+        super().tearDownClass()
+
+    def test_can_load_puzzle_list(self):
+        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+        self.selenium.get(f"{self.live_server_url}/puzzlelist/uber")
+        self.assertEqual(self.selenium.title, "Uber Puzzle List")
+
+        self.selenium.get(f"{self.live_server_url}/puzzlelist/ultra")
+        self.assertEqual(self.selenium.title, "Ultra Puzzle List")
+
+        self.selenium.get(f"{self.live_server_url}/puzzlelist/hyper")
+        self.assertEqual(self.selenium.title, "Hyper Puzzle List")
+
+    def test_can_click_on_puzzle(self):
+        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+        self.selenium.get(f"{self.live_server_url}/puzzlelist/uber")
+
+        puzzle_table = self.selenium.find_element(By.NAME, "puzzle_table")
+        puzzle_link = puzzle_table.find_elements(By.TAG_NAME, "a")[0]
+        uber_name = puzzle_link.text
+
+        puzzle_link.click()
+        self.assertEqual(self.selenium.title, f"Uber{uber_name}")
+
+    def test_can_change_page_by_button(self):
+        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+        self.selenium.get(f"{self.live_server_url}/puzzlelist/uber")
+
+        page_button = self.selenium.find_element(By.NAME, "2_page_button")
+
+        page_button.click()
+
+        self.assertEqual(self.selenium.title, "Uber Puzzle List")
+        self.assertEqual(self.selenium.current_url, f"{self.live_server_url}/puzzlelist/uber?page=2")
+
+    def test_can_change_page_by_input(self):
+        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+        self.selenium.get(f"{self.live_server_url}/puzzlelist/uber")
+
+        page_input = self.selenium.find_element(By.NAME, "page")
+
+        page_input.send_keys("2")
+
+        submit_button = self.selenium.find_element(By.ID, "submit_button")
+        submit_button.click()
+
+        self.assertEqual(self.selenium.title, "Uber Puzzle List")
+        self.assertEqual(self.selenium.current_url, f"{self.live_server_url}/puzzlelist/uber?page=2")

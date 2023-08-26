@@ -17,6 +17,7 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.KEY }}
         script: |
-          cd gogen/prod-gogen-app/gogensite
+          cd gogen/test-gogen-app/gogensite
           git pull
+          git checkout ${{github.event.pull_request.head.ref}}
           bash run_prod_tests.sh

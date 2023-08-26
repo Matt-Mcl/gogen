@@ -1,89 +1,23 @@
-import psycopg
 from gogen.models import *
 from datetime import datetime, timedelta
 from selenium import webdriver
-from django.conf import settings
-from django.test import TestCase, Client, RequestFactory
-from django.contrib.auth.models import AnonymousUser, User
+from django.test import Client, RequestFactory
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from ..helpers import test_helper
 
 
-def get_puzzle(puzzle_type, puzzle_date):
+class RegisterLoginPageCase(StaticLiveServerTestCase):
 
-    url = f"http://www.puzzles.grosse.is-a-geek.com/images/gog/puz/{puzzle_type}/{puzzle_type}{puzzle_date}puz.png"
-    
-    # Pull the puzzle from the database
-    with psycopg.connect(settings.PG_CONNECTION) as conn:
-        with conn.cursor() as cur:
-            cur.execute(f"SELECT * FROM {puzzle_type} WHERE puzzle_url = '{url}';")
-            puzzle = cur.fetchone()
-            if puzzle is None:
-                cur.execute(f"SELECT * FROM {puzzle_type} ORDER BY puzzle_name DESC LIMIT 1;")
-                puzzle = cur.fetchone()
-
-    return puzzle
-
-
-class PostgresTestCase(TestCase):
-    test_puzzle_type = "uber"
-    test_puzzle_date = "20190120"
-
-    def test_can_get_puzzle_from_db(self):
-        puzzle = get_puzzle(self.test_puzzle_type, self.test_puzzle_date)
-
-        name = puzzle[0]
-        puz_url = puzzle[1]
-        sol_url = puzzle[2]
-        words = puzzle[3]
-        board = puzzle[4]
-        solution_board = puzzle[5]
-        
-        self.assertEqual(name, "uber20190120")
-        self.assertEqual(puz_url, "http://www.puzzles.grosse.is-a-geek.com/images/gog/puz/uber/uber20190120puz.png")
-        self.assertEqual(sol_url, "http://www.puzzles.grosse.is-a-geek.com/images/gog/puz/uber/uber20190120sol.png")
-        self.assertEqual(words, ["BEGAN", "DOXIE", "FETUS", "GAMP", "GAMY", "GLUED", "GYBED", "GYRO", "JAY", "KUDO", "RHODIC", "ROW", "VIED"])
-        self.assertEqual(board, [['V', '', 'X', '', 'W'], ['', '', '', '', ''], ['T', '', 'D', '', 'J'], ['', '', '', '', ''], ['S', '', 'Q', '', 'P']])
-        self.assertEqual(solution_board, [['V', 'C', 'X', 'H', 'W'], ['F', 'I', 'B', 'O', 'R'], ['T', 'E', 'D', 'Y', 'J'], ['K', 'U', 'G', 'A', 'M'], ['S', 'L', 'Q', 'N', 'P']])
-
-
-class PuzzleLogTestCase(TestCase):
-
-    def setUp(self):
-        self.test_puzzle_type = "uber"
-        self.test_puzzle_date = "20190120"
-        self.test_status = "I"
-        self.test_board = [['V', '*', 'X', 'H', 'W'], ['*', 'I', 'B', 'O', 'R'], ['T', 'E', 'D', 'Y', 'J'], ['K', 'U', 'G', 'A', 'M'], ['S', 'L', 'Q', 'N', 'P']]
-        self.test_placeholders = [['A', 'B', '', '', ''], ['', 'C', '', 'D', ''], ['', '', 'E', '', ''], ['', '', 'F', '', ''], ['', '', 'G', '', '']]
-        self.test_notes = "test notes"
-        self.test_user = User.objects.create(username="testuser", password="testpassword")
-        PuzzleLog.objects.create(
-            puzzle_type=self.test_puzzle_type,
-            puzzle_date=self.test_puzzle_date,
-            status=self.test_status,
-            board=self.test_board, 
-            placeholders=self.test_placeholders,
-            notes=self.test_notes,
-            user=self.test_user
-        )
-
-    def test_can_complete_puzzle(self):
-        user_puzzle_log = PuzzleLog.objects.filter(puzzle_type=self.test_puzzle_type, puzzle_date=self.test_puzzle_date, user=self.test_user)
-
-        user_puzzle_log.update(
-            board=[['V', 'C', 'X', 'H', 'W'], ['F', 'I', 'B', 'O', 'R'], ['T', 'E', 'D', 'Y', 'J'], ['K', 'U', 'G', 'A', 'M'], ['S', 'L', 'Q', 'N', 'P']], 
-            placeholders = [['', '', '', '', ''], ['', '', '', '', ''], ['', '', '', '', ''], ['', '', '', '', ''], ['', '', '', '', '']],
-            status='C',
-            notes="test notes with more"
-        )
-
-        self.assertEqual(user_puzzle_log[0].board, [['V', 'C', 'X', 'H', 'W'], ['F', 'I', 'B', 'O', 'R'], ['T', 'E', 'D', 'Y', 'J'], ['K', 'U', 'G', 'A', 'M'], ['S', 'L', 'Q', 'N', 'P']])
-        self.assertEqual(user_puzzle_log[0].placeholders, [['', '', '', '', ''], ['', '', '', '', ''], ['', '', '', '', ''], ['', '', '', '', ''], ['', '', '', '', '']])
-        self.assertEqual(user_puzzle_log[0].status, 'C')
-        self.assertEqual(user_puzzle_log[0].notes, "test notes with more")
-
+    # test that register page loads
+    # test that login page loads
+    # consider adding the following as methods in test_helper.py:
+    # test that can register
+    # test that can login
+    # test that can logout
+    pass
 
 class DailyUberCase(StaticLiveServerTestCase):
 
@@ -105,6 +39,7 @@ class DailyUberCase(StaticLiveServerTestCase):
         super().tearDownClass()
 
     def test_can_load_daily_uber(self):
+        # TODO: Test logged in as well
         client = Client()
         response = client.get('/')
 
@@ -122,7 +57,7 @@ class DailyUberCase(StaticLiveServerTestCase):
 
     def test_can_sucessfully_complete_daily_uber(self):
         yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y%m%d')
-        puzzle = get_puzzle("uber", yesterday)
+        puzzle = test_helper.get_puzzle("uber", yesterday)
 
         solution_board = puzzle[5]
 
@@ -141,7 +76,7 @@ class DailyUberCase(StaticLiveServerTestCase):
         self.assertEqual(status_heading, "Correct!")
 
 
-class PuzzleFunctionalityCase(StaticLiveServerTestCase):
+class PuzzlePageCase(StaticLiveServerTestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -186,3 +121,43 @@ class PuzzleFunctionalityCase(StaticLiveServerTestCase):
 
         self.assertEqual(letter_input.get_attribute("value"), '')
         self.assertEqual(notes_input.get_attribute("value"), '')
+
+    def test_can_save(self):
+        # Don't need to check if data actually in DB, that's for models testing.
+        # Just check a successful response
+        pass
+
+    def test_can_load(self):
+        # Check letters, placeholders and notes all load
+        pass
+
+    def test_can_next(self):
+        pass
+
+    def test_letters_cross_off(self):
+        pass
+
+    def test_words_cross_off(self):
+        pass
+
+
+class SettingsPageCase(StaticLiveServerTestCase):
+
+    # test that settings page loads
+    # test that submit button works and return succesful response in each case.
+    # test each settings does what it should.
+    pass
+
+
+class LeaderboardPageCase(StaticLiveServerTestCase):
+
+    # test that leaderboard loads
+    # test that leaderboard is sorted correctly
+    pass
+
+
+class PuzzleListPageCase(StaticLiveServerTestCase):
+
+    # test that puzzle lists load
+    # test that puzzle lists are sorted correctly
+    pass

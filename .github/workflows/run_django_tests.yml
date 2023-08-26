@@ -1,5 +1,7 @@
 name: Run Django Tests
-on: 
+on:
+  pull_request:
+    branches: [ master ]
   push:
     branches: [ master ]
   schedule:

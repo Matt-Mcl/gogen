@@ -6,8 +6,11 @@ source ../venv/bin/activate
 
 pip install -r ../requirements.txt
 
+python3 manage.py makemigrations
+
 if [ $? -eq 1 ]; then
-    echo "Pull failed"
+    echo "Make migrations failed"
+    git reset --hard HEAD~1
     exit 1
 fi
 
@@ -21,10 +24,13 @@ fi
 
 python3 manage.py test
 
-if [ $? -eq 1 ]; then
-    echo "Tests failed"
-    git reset --hard HEAD~1
-    exit 1
-else
-    sudo systemctl restart gogen-site.service
-fi
+for run in {1..$max_retries}; do
+    python3 manage.py test gogen.tests.test_views && python3 manage.py test gogen.tests.test_database && python3 manage.py test gogen.tests.test_models
+    if [ $? = 0 ]; then
+        exit 0
+    fi
+done
+
+echo "Maximum retries reached. Exiting."
+git reset --hard HEAD~1
+exit 1

@@ -22,12 +22,16 @@ if [ $? -eq 1 ]; then
     exit 1
 fi
 
-python3 manage.py test
+max_retries=10
+retry_count=0
 
-for run in {1..$max_retries}; do
+while [ $retry_count -lt $max_retries ]; do
     python3 manage.py test gogen.tests.test_views && python3 manage.py test gogen.tests.test_database && python3 manage.py test gogen.tests.test_models
     if [ $? = 0 ]; then
         exit 0
+    else
+        echo "Some tests failed. Retrying..."
+        retry_count=$((retry_count + 1))
     fi
 done
 

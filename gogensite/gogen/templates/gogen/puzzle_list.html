@@ -5,13 +5,13 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>{{ page_heading }}</title>
+        <title>{{ puzzle_type }} {{ page_heading }}</title>
     </head>
     <body>
         <div class="container">
-            <h2 class="my-4">{{ page_heading }}</h2>
+            <h2 class="my-4">{{ puzzle_type }} {{ page_heading }}</h2>
             <div class="row">
-                <table class="table">
+                <table class="table" name="puzzle_table">
                     <tr>
                         <th>{{ puzzle_type }} Gogen</th>
                         <th></th>
@@ -38,30 +38,30 @@
                         <ul class="navbar-nav">
                             <li class="nav-item">
                                 {% if page_puzzles.number > 1 %}
-                                    <a class="nav-link active" aria-current="page" href="?page={{ page_puzzles.number | add:"-1" }}">&#60;</a>
+                                    <a class="nav-link active" name="{{ page_puzzles.number | add:"-1" }}_page_button" aria-current="page" href="?page={{ page_puzzles.number | add:"-1" }}">&#60;</a>
                                 {% else %}
-                                    <a class="nav-link active" aria-current="page" href="">&#60;</a>
+                                    <a class="nav-link active" name="no_page_button" aria-current="page" href="">&#60;</a>
                                 {% endif %}
                             </li>
                             {% for page_num in lower_range %}
                                 <li class="nav-item">
-                                    <a class="nav-link active" aria-current="page" href="?page={{ page_num }}">{{ page_num }}</a>
+                                    <a class="nav-link active" name="{{ page_num }}_page_button" aria-current="page" href="?page={{ page_num }}">{{ page_num }}</a>
                                 </li>
                             {% endfor %}
                             {% if page_puzzles.paginator.num_pages > 20 %}
                                 <li class="nav-item">
-                                    <a class="nav-link active" aria-current="page">...</a>
+                                    <a class="nav-link active" name="page_seperator" aria-current="page">...</a>
                                 </li>
                             {% endif %}
                             {% for page_num in upper_range %}
                                 <li class="nav-item">
-                                    <a class="nav-link active" aria-current="page" href="?page={{ page_num }}">{{ page_num }}</a>
+                                    <a class="nav-link active" name="{{ page_num }}_page_button" aria-current="page" href="?page={{ page_num }}">{{ page_num }}</a>
                                 </li>
                             {% endfor %}
                             {% if page_puzzles.number < page_puzzles.paginator.num_pages %}
-                                <a class="nav-link active" aria-current="page" href="?page={{ page_puzzles.number | add:"1" }}">&#62;</a>
+                                <a class="nav-link active" name="{{ page_puzzles.number | add:"1" }}_page_button" aria-current="page" href="?page={{ page_puzzles.number | add:"1" }}">&#62;</a>
                             {% else %}
-                                <a class="nav-link active" aria-current="page" href="">&#62;</a>
+                                <a class="nav-link active" name="no_page_button" aria-current="page" href="">&#62;</a>
                             {% endif %}
                         </ul>
                     </div>
@@ -73,7 +73,7 @@
                         <input class="form-control" type="number" placeholder="Page Number" name="page">
                     </div>
                     <div class="col">
-                        <button class="btn btn-primary mb-2" type="submit">Submit</button>
+                        <button class="btn btn-primary mb-2" type="submit" id="submit_button">Submit</button>
                     </div>
                 </div>
             </form>

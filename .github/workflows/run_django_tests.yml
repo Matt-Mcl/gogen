@@ -19,8 +19,5 @@ jobs:
         script: |
           cd gogen/test-gogen-app/gogensite
           git pull
-          echo "testtestesttesttestesttesttestesttesttestesttesttestesttesttestest"
-          echo ${{github.event.pull_request.head.ref}}
-          echo "testtestesttesttestesttesttestesttesttestesttesttestesttesttestest"
           git checkout ${{github.event.pull_request.head.ref}}
           bash run_prod_tests.sh

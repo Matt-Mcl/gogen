@@ -52,8 +52,7 @@ def puzzle_list_view(request, puzzle_type):
         try:
             page_puzzles = paginated_puzzles.page(this_page)
         except (PageNotAnInteger, EmptyPage):
-            this_page = "1"
-            page_puzzles = paginated_puzzles.page(1)
+            return redirect(f"/puzzlelist/{puzzle_type}")
 
         # Check if the user has completed the puzzle
         for puzzle in page_puzzles:

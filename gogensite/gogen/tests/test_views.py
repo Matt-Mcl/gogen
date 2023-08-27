@@ -93,24 +93,8 @@ class DailyUberCase(StaticLiveServerTestCase):
         cls.selenium.quit()
         super().tearDownClass()
 
-    def test_can_load_daily_uber(self):
-        # TODO: Test logged in as well and see title?
-        client = Client()
-        response = client.get('/')
-
-        self.assertEqual(response.status_code, 200)
-        
-    def test_can_unsucessfully_complete_daily_uber(self): 
-        self.selenium.get(f"{self.live_server_url}/")
-        letter_input = self.selenium.find_element(By.NAME, "01_board_letter")
-        letter_input.send_keys('A')
-        submit_button = self.selenium.find_element(By.NAME, "submit_button")
-        submit_button.click()
-        status_heading = self.selenium.find_element(By.CLASS_NAME, "fadingHeading").text
-
-        self.assertEqual(status_heading, "Incorrect!")
-
-    def test_can_sucessfully_complete_daily_uber(self):
+    @classmethod
+    def complete_daily_uber(self):
         yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y%m%d')
         puzzle = test_helper.get_puzzle("uber", yesterday)
 
@@ -128,6 +112,39 @@ class DailyUberCase(StaticLiveServerTestCase):
         submit_button.click()
         status_heading = self.selenium.find_element(By.CLASS_NAME, "fadingHeading").text
 
+        return status_heading
+
+    def test_can_load_daily_uber(self):
+        client = Client()
+        response = client.get('/')
+
+        self.assertEqual(response.status_code, 200)
+        
+    def test_can_unsucessfully_complete_daily_uber(self): 
+        self.selenium.get(f"{self.live_server_url}/")
+        letter_input = self.selenium.find_element(By.NAME, "01_board_letter")
+        letter_input.send_keys('A')
+        submit_button = self.selenium.find_element(By.NAME, "submit_button")
+        submit_button.click()
+        status_heading = self.selenium.find_element(By.CLASS_NAME, "fadingHeading").text
+
+        self.assertEqual(status_heading, "Incorrect!")
+
+    def test_can_sucessfully_complete_daily_uber(self):
+        status_heading = self.complete_daily_uber()
+
+        self.assertEqual(status_heading, "Correct!")
+
+    def test_can_sucessfully_complete_daily_uber_logged_in(self):
+        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+        status_heading = self.complete_daily_uber()
+
+        self.assertEqual(status_heading, "Correct!")
+
+        self.selenium.get(f"{self.live_server_url}/")
+        submit_button = self.selenium.find_element(By.NAME, "submit_button")
+        submit_button.click()
+        status_heading = self.selenium.find_element(By.CLASS_NAME, "fadingHeading").text
         self.assertEqual(status_heading, "Correct!")
 
 
@@ -209,7 +226,10 @@ class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
         placeholder_input = self.selenium.find_element(By.NAME, "03_board_letter")
         placeholder_input.send_keys('B')
         save_button = self.selenium.find_element(By.NAME, "save_button")
+        wait = WebDriverWait(self.selenium, timeout=5)
         save_button.click()
+
+        wait.until(lambda _ : "saved" in save_button.get_attribute("class"))
 
         self.selenium.get(f"{self.live_server_url}/uber20190120")
         letter_input = self.selenium.find_element(By.NAME, "01_board_letter")
@@ -220,6 +240,25 @@ class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
         self.assertEqual(placeholder_input.get_attribute("placeholder"), "B")
         self.assertEqual(notes_input.get_attribute("value"), "test notes")
 
+    # def test_already_existing_puzzlelog(self):
+    #     login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+
+    #     PuzzleLog.objects.create(puzzle_type="uber", puzzle_date="20190120", board=[['V', 'C', 'X', 'H', 'W'], ['F', 'I', 'B', 'O', 'R'], ['T', 'E', 'D', 'Y', 'J'], ['K', 'U', 'G', 'A', 'M'], ['S', 'L', 'Q', 'N', 'P']], placeholders=[], status="C", user=User.objects.get(username="testuser"))
+    #     self.selenium.get(f"{self.live_server_url}/uber20190120")
+    #     submit_button = self.selenium.find_element(By.NAME, "submit_button")
+    #     submit_button.click()
+
+    #     status_heading = self.selenium.find_element(By.CLASS_NAME, "fadingHeading").text
+    #     self.assertEqual(status_heading, "Correct!")
+
+    #     self.selenium.get(f"{self.live_server_url}/uber20190120")
+
+    #     submit_button = self.selenium.find_element(By.NAME, "submit_button")
+    #     submit_button.click()
+
+    #     status_heading = self.selenium.find_element(By.CLASS_NAME, "fadingHeading").text
+    #     self.assertEqual(status_heading, "Correct!")
+
     def test_can_next(self):
         login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
         self.selenium.get(f"{self.live_server_url}/uber20190120")
@@ -227,10 +266,31 @@ class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
         # No next puzzle so throw not clickable exception
         self.assertRaises(ElementClickInterceptedException, next_button.click)
 
-        self.selenium.get(f"{self.live_server_url}/uber20190121")
+        PuzzleLog.objects.create(puzzle_type="uber", puzzle_date="20190121", board=[], placeholders=[], status="C", user=User.objects.get(username="testuser"))
+        self.selenium.get(f"{self.live_server_url}/uber20190122")
         next_button = self.selenium.find_element(By.NAME, "next_button")
         next_button.click()
         self.assertEqual(self.selenium.title, "Uber20190120")
+
+    def test_can_next_with_some_solved(self):
+        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+        PuzzleLog.objects.create(puzzle_type="uber", puzzle_date="20190131", board=[], placeholders=[], status="C", user=User.objects.get(username="testuser"))
+        PuzzleLog.objects.create(puzzle_type="uber", puzzle_date="20190130", board=[], placeholders=[], status="C", user=User.objects.get(username="testuser"))
+        PuzzleLog.objects.create(puzzle_type="uber", puzzle_date="20190129", board=[], placeholders=[], status="I", user=User.objects.get(username="testuser"))
+
+        self.selenium.get(f"{self.live_server_url}/uber20190201")
+        next_button = self.selenium.find_element(By.NAME, "next_button")
+        next_button.click()
+        self.assertEqual(self.selenium.title, "Uber20190129")
+
+    def test_can_next_with_gap(self):
+        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+        PuzzleLog.objects.create(puzzle_type="uber", puzzle_date="20190120", board=[], placeholders=[], status="C", user=User.objects.get(username="testuser"))
+
+        self.selenium.get(f"{self.live_server_url}/uber20190122")
+        next_button = self.selenium.find_element(By.NAME, "next_button")
+        next_button.click()
+        self.assertEqual(self.selenium.title, "Uber20190121")
 
     def test_letters_cross_off(self):
         login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
@@ -434,3 +494,28 @@ class PuzzleListPageCase(StaticLiveServerTestCase):
 
         self.assertEqual(self.selenium.title, "Uber Puzzle List")
         self.assertEqual(self.selenium.current_url, f"{self.live_server_url}/puzzlelist/uber?page=2")
+
+    def test_cannot_go_to_invalid_page(self):
+        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+        self.selenium.get(f"{self.live_server_url}/puzzlelist/uber?page=9999")
+
+        self.assertEqual(self.selenium.title, "Uber Puzzle List")
+        self.assertEqual(self.selenium.current_url, f"{self.live_server_url}/puzzlelist/uber")
+
+    def test_complete_puzzles_are_ticked_off(self):
+        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+        self.selenium.get(f"{self.live_server_url}/puzzlelist/uber")
+
+        puzzle_table = self.selenium.find_element(By.NAME, "puzzle_table")
+        uber_name = puzzle_table.find_elements(By.TAG_NAME, "a")[0].text
+        puzzle_status = puzzle_table.find_elements(By.TAG_NAME, "td")[1].text
+        self.assertEqual(puzzle_status, "-")
+
+        PuzzleLog.objects.create(puzzle_type="uber", puzzle_date=uber_name, board=[], placeholders=[], status="C", user=User.objects.get(username="testuser"))
+
+        self.selenium.get(f"{self.live_server_url}/puzzlelist/uber")
+        puzzle_table = self.selenium.find_element(By.NAME, "puzzle_table")
+        puzzle_status = puzzle_table.find_elements(By.TAG_NAME, "td")[1].text
+
+        self.assertEqual(puzzle_status, "✓")
+

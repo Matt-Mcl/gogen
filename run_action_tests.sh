@@ -33,7 +33,7 @@ retry_count=0
 max_retries=5
 
 while [ $retry_count -lt $max_retries ]; do
-    python3 manage.py test gogen.tests.test_views && python3 manage.py test gogen.tests.test_database && python3 manage.py test gogen.tests.test_models
+    python3 manage.py test gogen.tests.test_views --noinput && python3 manage.py test gogen.tests.test_database --noinput && python3 manage.py test gogen.tests.test_models --noinput
     if [ $? = 0 ]; then
         exit 0
     else

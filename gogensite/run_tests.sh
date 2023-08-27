@@ -8,8 +8,8 @@ source "../venv/bin/activate"
 
 export DJANGO_SETTINGS_MODULE=gogensite.settings
 
-max_retries=10
 retry_count=0
+max_retries=5
 
 while [ $retry_count -lt $max_retries ]; do
     python3 manage.py test gogen.tests.test_views && python3 manage.py test gogen.tests.test_database && python3 manage.py test gogen.tests.test_models

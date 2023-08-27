@@ -17,10 +17,9 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.KEY }}
         script: |
-          cd gogen/test-gogen-app/gogensite
-          git reset --hard HEAD~10
-          git pull
-          git checkout master
+          cd gogen
+          rm -rf test-gogen-app
+          git clone https://github.com/Matt-Mcl/gogen test-gogen-app
+          cd test-gogen-app
           git checkout ${{github.event.pull_request.head.ref}}
-          git pull
-          bash run_prod_tests.sh
+          bash run_action_tests.sh

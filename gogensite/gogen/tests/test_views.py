@@ -353,8 +353,10 @@ class SettingsPageCase(StaticLiveServerTestCase):
         notes_input.click()
 
         submit_button = self.selenium.find_element(By.NAME, "submit_button")
+        wait = WebDriverWait(self.selenium, timeout=5)
         submit_button.click()
-        self.selenium.get(f"{self.live_server_url}/settings")
+
+        wait.until(lambda _ : "saved" in submit_button.get_attribute("class"))
         
         test_user = User.objects.get(username="testuser")
         self.assertEqual(test_user.settings.notes_enabled, False)

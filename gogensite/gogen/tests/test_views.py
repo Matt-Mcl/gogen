@@ -95,8 +95,8 @@ class DailyUberCase(StaticLiveServerTestCase):
 
     @classmethod
     def complete_daily_uber(self):
-        yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y%m%d')
-        puzzle = test_helper.get_puzzle("uber", yesterday)
+        today = datetime.now().strftime('%Y%m%d')
+        puzzle = test_helper.get_puzzle("uber", today)
 
         solution_board = puzzle[5]
 

@@ -1,6 +1,7 @@
 asgiref==3.7.2
 attrs==23.1.0
 certifi==2023.7.22
+coverage==7.3.0
 Django==4.2.4
 exceptiongroup==1.1.3
 gazpacho==1.1
@@ -19,6 +20,7 @@ selenium==4.11.2
 sniffio==1.3.0
 sortedcontainers==2.4.0
 sqlparse==0.4.4
+tblib==2.0.0
 trio==0.22.2
 trio-websocket==0.10.3
 typing_extensions==4.7.1

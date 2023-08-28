@@ -1,4 +1,5 @@
 from helper import *
+from datetime import datetime, timedelta
 import psycopg
 import sys
 
@@ -17,7 +18,13 @@ if len(sys.argv) > 2:
     amount = int(sys.argv[2])
 
 if amount > 0:
-    urls = urls[:int(amount)]
+    urls = urls[:int(amount-1)]
+
+yesterday_puzzle_date = urls[0][0].split('/')[-1][-15:-7]
+today_puzzle_date = (datetime.strptime(yesterday_puzzle_date, "%Y%m%d") + timedelta(days=1)).strftime('%Y%m%d')
+
+url_stub = f"http://www.puzzles.grosse.is-a-geek.com/images/gog/puz/{puzzle_type}/{puzzle_type}{today_puzzle_date}"
+urls.insert(0, (f"{url_stub}puz.png", f"{url_stub}sol.png"))
 
 with psycopg.connect("dbname=gogen user=postgresmd5") as conn:
     with conn.cursor() as cur:

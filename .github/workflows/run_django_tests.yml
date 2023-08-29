@@ -1,4 +1,5 @@
 name: Run Django Tests
+concurrency: django_tests
 on:
   pull_request:
     branches: [ master ]

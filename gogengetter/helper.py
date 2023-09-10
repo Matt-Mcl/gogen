@@ -123,6 +123,7 @@ def get_words(image_url):
             # Crop image to just word
             cropped_img = img_gray[start[0] + j * 14:start[1] + j * 14, start[2] + i * 42:start[3] + i * 42]
             letters = []
+            no_match = False
 
             # Debug
             # cv2.imwrite(f"temp/{i}{j}.png", cropped_img)
@@ -149,11 +150,16 @@ def get_words(image_url):
 
                     # Check against threshold value
                     if maxVal > 0.95:
+                        if no_match:
+                            letters = []
+                            no_match = False
                         letters.append(filename[0])
                         break
                 
                 else:
-                    if len(letters) > 1:
+                    if not no_match:
+                        no_match = True
+                    elif len(letters) > 1:
                         break
                     elif len(letters) > 0:
                         letters = []

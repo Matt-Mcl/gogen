@@ -123,7 +123,6 @@ def get_words(image_url):
             # Crop image to just word
             cropped_img = img_gray[start[0] + j * 14:start[1] + j * 14, start[2] + i * 42:start[3] + i * 42]
             letters = []
-            no_match = False
 
             # Debug
             # cv2.imwrite(f"temp/{i}{j}.png", cropped_img)
@@ -132,6 +131,17 @@ def get_words(image_url):
             for k in range(0, 9):
                 # Crop word to letter
                 letter_img = cropped_img[0:9, 0 + k * 7:6 + k * 7]
+
+                # Check if letter is blank
+                if np.mean(letter_img) == 255:
+                    if len(letters) > 1:
+                        # Check that word isn't the end of another word
+                        if len(list(filter(lambda x: ''.join(letters) in x, words))) == 0:
+                            break
+                        else:
+                            letters = []
+                    elif len(letters) > 0:
+                        letters = []
 
                 # Loop through each template letter
                 for filename in os.listdir("letters/words"):
@@ -150,19 +160,8 @@ def get_words(image_url):
 
                     # Check against threshold value
                     if maxVal > 0.95:
-                        if no_match:
-                            letters = []
-                            no_match = False
                         letters.append(filename[0])
                         break
-                
-                else:
-                    if not no_match:
-                        no_match = True
-                    elif len(letters) > 1:
-                        break
-                    elif len(letters) > 0:
-                        letters = []
 
             # Checks parts of words aren't being repeated
             if len(list(filter(lambda x: ''.join(letters) in x, words))) == 0:

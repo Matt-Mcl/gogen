@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ -n "$1" ]; then
+    cd "$1"
+fi
+
 source "../venv/bin/activate"
 
 python3 -c 'from helper import get_tables; get_tables()'

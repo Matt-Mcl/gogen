@@ -2,8 +2,10 @@ from gazpacho import get, Soup
 import os
 import cv2
 import numpy as np
+import warnings
 from urllib.request import urlopen
 
+np.seterr(all="ignore")
 
 def get_tables():
     # Get table urls
@@ -133,15 +135,17 @@ def get_words(image_url):
                 letter_img = cropped_img[0:9, 0 + k * 7:6 + k * 7]
 
                 # Check if letter is blank
-                if np.mean(letter_img) == 255:
-                    if len(letters) > 1:
-                        # Check that word isn't the end of another word
-                        if len(list(filter(lambda x: ''.join(letters) in x, words))) == 0:
-                            break
-                        else:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", category=RuntimeWarning)
+                    if np.mean(letter_img) == 255:
+                        if len(letters) > 1:
+                            # Check that word isn't the end of another word
+                            if len(list(filter(lambda x: ''.join(letters) in x, words))) == 0:
+                                break
+                            else:
+                                letters = []
+                        elif len(letters) > 0:
                             letters = []
-                    elif len(letters) > 0:
-                        letters = []
 
                 # Loop through each template letter
                 for filename in os.listdir("letters/words"):

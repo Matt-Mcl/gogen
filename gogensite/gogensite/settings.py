@@ -92,11 +92,10 @@ if 'test' in sys.argv:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('PG_TEST_DBNAME'),
-            'USER': os.getenv('PG_USER'),
-            'PASSWORD': os.getenv('PG_PASSWORD'),
-            'HOST': 'localhost',
-            'PORT': '5432',
+            'OPTIONS': {
+                'service': 'gogensite_service_test',
+                'passfile': '/home/ubuntu/.pgpass',
+            },
         }
     }
 else:

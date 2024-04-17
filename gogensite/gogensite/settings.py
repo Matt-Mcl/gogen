@@ -88,14 +88,15 @@ WSGI_APPLICATION = 'gogensite.wsgi.application'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
 DATABASES = {}
-if 'test' in sys.argv:
+if 'True' in os.getenv("TESTING"):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'OPTIONS': {
-                'service': 'gogensite_service_test',
-                'passfile': '/home/ubuntu/.pgpass',
-            },
+            'NAME': os.getenv('PG_TEST_DBNAME'),
+            'USER': os.getenv('PG_USER'),
+            'PASSWORD': os.getenv('PG_PASSWORD'),
+            'HOST': 'localhost',
+            'PORT': '5432',
         }
     }
 else:

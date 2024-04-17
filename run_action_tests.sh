@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export DJANGO_SETTINGS_MODULE=gogensite.settings
-export PGSERVICEFILE="/home/ubuntu/.pg_service.conf"
+export TESTING="True"
 
 if [ ! -d venv ]; then
     echo "venv not present - creating" 

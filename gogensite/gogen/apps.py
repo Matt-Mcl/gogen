@@ -6,7 +6,7 @@ class GogenConfig(AppConfig):
     name = 'gogen'
 
     def ready(self):
-        if 'True' in os.getenv("TESTING"):
+        if os.getenv("TESTING") == "True":
             return
         
         from .models import PuzzleLog

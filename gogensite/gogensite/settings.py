@@ -88,7 +88,7 @@ WSGI_APPLICATION = 'gogensite.wsgi.application'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
 DATABASES = {}
-if 'True' in os.getenv("TESTING"):
+if os.getenv("TESTING") == "True":
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',

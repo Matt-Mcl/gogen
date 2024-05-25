@@ -33,7 +33,7 @@ PG_CONNECTION = f"dbname={os.getenv('PG_PUZZLE_DBNAME')} user={os.getenv('PG_PUZ
 
 DEBUG = True
 
-ALLOWED_HOSTS = ["gogen.manysite.net", "localhost"]
+ALLOWED_HOSTS = ["localhost", "test.manysite.net", "gogen.manysite.net"]
 
 # Application definition
 

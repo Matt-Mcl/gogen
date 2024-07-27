@@ -33,6 +33,7 @@ class RegisterLoginPageCase(StaticLiveServerTestCase):
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument('--remote-debugging-pipe')
         cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
         cls.selenium.implicitly_wait(10)
 
@@ -85,6 +86,7 @@ class DailyUberCase(StaticLiveServerTestCase):
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument('--remote-debugging-pipe')
         cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
         cls.selenium.implicitly_wait(10)
 
@@ -159,6 +161,7 @@ class PuzzlePageLoggedOutCase(StaticLiveServerTestCase):
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument('--remote-debugging-pipe')
         cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
         cls.selenium.implicitly_wait(10)
 
@@ -206,6 +209,7 @@ class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument('--remote-debugging-pipe')
         cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
         cls.selenium.implicitly_wait(10)
 
@@ -329,6 +333,7 @@ class SettingsPageCase(StaticLiveServerTestCase):
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument('--remote-debugging-pipe')
         cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
         cls.selenium.implicitly_wait(10)
         NoteTemplate.objects.create(name="test name", template="test template")
@@ -397,6 +402,7 @@ class LeaderboardPageCase(StaticLiveServerTestCase):
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument('--remote-debugging-pipe')
         cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
         cls.selenium.implicitly_wait(10)
 
@@ -442,6 +448,7 @@ class PuzzleListPageCase(StaticLiveServerTestCase):
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument('--remote-debugging-pipe')
         cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
         cls.selenium.implicitly_wait(10)
 

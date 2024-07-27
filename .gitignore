@@ -4,3 +4,10 @@ tables.html
 __pycache__
 .env
 static
+
+# Postgres config
+.pgpass
+.pg_service.conf
+
+# Gunicorn
+error.log

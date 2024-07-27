@@ -29,7 +29,7 @@ try:
 except KeyError as e:
     raise RuntimeError("Could not find a SECRET_KEY in environment") from e
 
-PG_CONNECTION = f"dbname={os.getenv('PG_PUZZLE_DBNAME')} user={os.getenv('PG_PUZZLE_USER')} password={os.getenv('PG_PUZZLE_PASSWORD')}"
+PG_CONNECTION = f"dbname={os.getenv('PG_PUZZLE_DBNAME')} user={os.getenv('PG_PUZZLE_USER')} password={os.getenv('PG_PUZZLE_PASSWORD')} host={os.getenv('PG_HOST')} port={os.getenv('PG_PORT')}"
 
 DEBUG = True
 

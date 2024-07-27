@@ -17,7 +17,7 @@ jobs:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.KEY }}
-        port: 2222
+        port: ${{ secrets.PORT }}
         script: |
           cd gogen
           rm -rf test-gogen-app

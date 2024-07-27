@@ -29,7 +29,7 @@ try:
 except KeyError as e:
     raise RuntimeError("Could not find a SECRET_KEY in environment") from e
 
-PG_CONNECTION = f"dbname={os.getenv('PG_PUZZLE_DBNAME')} user={os.getenv('PG_PUZZLE_USER')} password={os.getenv('PG_PUZZLE_PASSWORD')}"
+PG_CONNECTION = f"dbname={os.getenv('PG_PUZZLE_DBNAME')} user={os.getenv('PG_PUZZLE_USER')} password={os.getenv('PG_PUZZLE_PASSWORD')} host={os.getenv('PG_HOST')} port={os.getenv('PG_PORT')}"
 
 DEBUG = False
 
@@ -95,8 +95,8 @@ if os.getenv("TESTING") == "True":
             'NAME': os.getenv('PG_TEST_DBNAME'),
             'USER': os.getenv('PG_USER'),
             'PASSWORD': os.getenv('PG_PASSWORD'),
-            'HOST': 'localhost',
-            'PORT': '5432',
+            'HOST': os.getenv('PG_HOST'),
+            'PORT': os.getenv('PG_PORT'),
         }
     }
 else:
@@ -105,7 +105,7 @@ else:
             'ENGINE': 'django.db.backends.postgresql',
             'OPTIONS': {
                 'service': 'gogensite_service',
-                'passfile': '/home/ubuntu/.pgpass',
+                'passfile': '/app/.pgpass',
             },
         }
     }

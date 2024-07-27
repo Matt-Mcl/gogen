@@ -14,7 +14,7 @@ fi
 
 cd gogensite
 
-cp ../../dev-gogen-app/gogensite/.env .env
+cp ../../prod-gogen-app/gogensite/.env .env
 
 python3 manage.py makemigrations
 

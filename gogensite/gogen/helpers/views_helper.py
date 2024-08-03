@@ -78,10 +78,14 @@ def get_next_puzzle(request, puzzle_type, puzzle_date):
 def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
 
     url = f"http://www.puzzles.grosse.is-a-geek.com/images/gog/puz/{puzzle_type}/{puzzle_type}{puzzle_date}puz.png"
-    
-    # Pull the puzzle from the database
+    puzzle_count = 0
+
+    # Pull the puzzle from the database + get the count for the puzzle type
     with psycopg.connect(settings.PG_CONNECTION) as conn:
         with conn.cursor() as cur:
+            cur.execute(f"SELECT COUNT(*) FROM {puzzle_type};")
+            puzzle_count = cur.fetchone()[0]
+
             cur.execute(f"SELECT * FROM {puzzle_type} WHERE puzzle_url = '{url}';")
             puzzle = cur.fetchone()
             if puzzle is None:
@@ -126,6 +130,7 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
             'page_heading': page_heading,
             'navbar_template': navbar_template,
             'logged_in': request.user.id is not None,
+            'puzzle_count': puzzle_count * 3,
             'next_puzzle_url': get_next_puzzle(request, puzzle_type, puzzle_date),
             'notes_enabled': user_settings.notes_enabled,
             'preset_notes': user_settings.preset_notes
@@ -153,10 +158,14 @@ def post_puzzle(request, page_heading):
 
     puzzle_type = url.split('/')[-1][:-15]
     puzzle_date = url.split('/')[-1][-15:-7]
+    puzzle_count = 0
 
-    # Pull the puzzle from the database
+    # Pull the puzzle from the database + get the count for the puzzle type
     with psycopg.connect(settings.PG_CONNECTION) as conn:
         with conn.cursor() as cur:
+            cur.execute(f"SELECT COUNT(*) FROM {puzzle_type};")
+            puzzle_count = cur.fetchone()[0]
+
             cur.execute(f"SELECT * FROM {puzzle_type} WHERE puzzle_url = '{url}';")
 
             puzzle = cur.fetchone()
@@ -238,6 +247,7 @@ def post_puzzle(request, page_heading):
             'complete': complete,
             'page_heading': page_heading,
             'navbar_template': navbar_template,
+            'puzzle_count': puzzle_count * 3,
             'logged_in': request.user.id is not None,
             'next_puzzle_url': get_next_puzzle(request, puzzle_type, puzzle_date),
             'notes_enabled': user_settings.notes_enabled

@@ -32,8 +32,5 @@ For tests:
 ```bash
 sudo apt-get install chromium-browser
 ```
-
-Run `/usr/bin/chromium-browser --version`
-
-Get chrome driver that matches the installed chromium version:
-`https://googlechromelabs.github.io/chrome-for-testing/` or `https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json` for a specific version `>` copy to `/usr/bin/chromedriver`
+This should automatically install the browser as well as the driver. (ensure snap is installed)
+Check that `/snap/bin/chromium.chromedriver` exists.

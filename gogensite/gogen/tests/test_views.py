@@ -27,7 +27,7 @@ class RegisterLoginPageCase(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        service = Service("/usr/bin/chromedriver")
+        service = Service("/snap/bin/chromium.chromedriver")
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
@@ -80,7 +80,7 @@ class DailyUberCase(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        service = Service("/usr/bin/chromedriver")
+        service = Service("/snap/bin/chromium.chromedriver")
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
@@ -155,7 +155,7 @@ class PuzzlePageLoggedOutCase(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        service = Service("/usr/bin/chromedriver")
+        service = Service("/snap/bin/chromium.chromedriver")
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
@@ -203,7 +203,7 @@ class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        service = Service("/usr/bin/chromedriver")
+        service = Service("/snap/bin/chromium.chromedriver")
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
@@ -327,7 +327,7 @@ class SettingsPageCase(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        service = Service("/usr/bin/chromedriver")
+        service = Service("/snap/bin/chromium.chromedriver")
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
@@ -396,7 +396,7 @@ class LeaderboardPageCase(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        service = Service("/usr/bin/chromedriver")
+        service = Service("/snap/bin/chromium.chromedriver")
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
@@ -442,7 +442,7 @@ class PuzzleListPageCase(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        service = Service("/usr/bin/chromedriver")
+        service = Service("/snap/bin/chromium.chromedriver")
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")

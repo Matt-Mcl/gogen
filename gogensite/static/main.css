@@ -1,0 +1,50 @@
+:root {
+  --mcl1: #E8FAFF;
+  --mcl2: #CAF4FF;
+  --mcl3: #A0DEFF;
+  --mcl4: #5AB2FF;
+}
+
+.mcl-bg2 {
+  background-color: var(--mcl2) !important;
+}
+
+.savebutton {
+  transition: 0.5s;
+}
+
+.savebutton.saved {
+  border-color: #27ae60;
+  background-color: #27ae60;
+}
+
+.savebutton.error {
+  border-color: #dc3545;
+  background-color: #dc3545;
+}
+
+.submitbutton {
+  transition: 0.5s;
+  animation: changeColor 5s forwards;
+}
+
+.fadingHeading {
+  opacity: 1;
+  animation: fadeOut 1s 5s forwards;
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes changeColor {
+  0% {
+    border-color: #db3545;
+    background-color: #db3545;
+  }
+  100% {
+    border-color: "";
+    background-color: "";
+  }
+}

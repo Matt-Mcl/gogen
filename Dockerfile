@@ -10,8 +10,4 @@ COPY ./gogensite .
 
 EXPOSE 8002
 
-CMD ["python3", "manage.py", "migrate"]
-
-CMD ["python3", "manage.py", "collectstatic"]
-
 CMD ["gunicorn", "-b", "0.0.0.0:8002", "gogensite.wsgi:application", "--log-level=debug", "--error-logfile=/app/error.log", "--access-logfile=/app/error.log"]

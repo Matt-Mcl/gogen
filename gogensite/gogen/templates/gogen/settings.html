@@ -6,16 +6,6 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{{ page_heading }}</title>
-        <style>
-            .submitbutton.saved {
-                border-color: #27ae60;
-                background-color: #27ae60;
-            }
-            .submitbutton.error {
-                border-color: #dc3545;
-                background-color: #dc3545;
-            }
-        </style>
     </head>
     <body>
         <div class="container">
@@ -40,7 +30,7 @@
                         {% endfor %}
                     </ul>
                     <br>
-                    <button class="btn btn-primary my-1 submitbutton" type="submit" name="submit_button">Submit</button>
+                    <button class="btn btn-primary savebutton" type="submit" name="save_button">Save</button>
                 </form>
             </div>
             <div class="row">
@@ -55,7 +45,7 @@
             var form = $(this);
                 
             var actionUrl = form.attr('action');
-            const submitButton = document.getElementsByName("submit_button")[0];
+            const saveButton = document.getElementsByName("save_button")[0];
             e.preventDefault();
 
             $.ajax({
@@ -63,18 +53,18 @@
                 url: actionUrl,
                 data: form.serialize(),
                 success: function(data) {
-                    submitButton.classList.add("saved");
+                    saveButton.classList.add("saved");
                     setTimeout(() => {
-                        submitButton.classList.remove("saved");
+                        saveButton.classList.remove("saved");
                     }, 2000);
                     console.log("saved");
                 },
                 error: function(data) {
-                    submitButton.innerText = "Error";
-                    submitButton.classList.add("error");
+                    saveButton.innerText = "Error";
+                    saveButton.classList.add("error");
                     setTimeout(() => {
-                        submitButton.classList.remove("error");
-                        submitButton.innerText = "Submit";
+                        saveButton.classList.remove("error");
+                        saveButton.innerText = "Save";
                     }, 2000);
                     console.log("error saving");
                 }

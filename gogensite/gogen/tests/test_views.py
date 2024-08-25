@@ -104,7 +104,7 @@ class DailyUberCase(StaticLiveServerTestCase):
 
         self.selenium.get(f"{self.live_server_url}/")
 
-        letter_input = self.selenium.find_elements(By.CLASS_NAME, "form-control")
+        letter_input = self.selenium.find_elements(By.CLASS_NAME, "letter_input")
 
         # Go through each input box and put in correct letter
         for item in letter_input:
@@ -357,11 +357,11 @@ class SettingsPageCase(StaticLiveServerTestCase):
         notes_input = self.selenium.find_element(By.NAME, "notes_enabled")
         notes_input.click()
 
-        submit_button = self.selenium.find_element(By.NAME, "submit_button")
+        save_button = self.selenium.find_element(By.NAME, "save_button")
         wait = WebDriverWait(self.selenium, timeout=5)
-        submit_button.click()
+        save_button.click()
 
-        wait.until(lambda _ : "saved" in submit_button.get_attribute("class"))
+        wait.until(lambda _ : "saved" in save_button.get_attribute("class"))
         
         test_user = User.objects.get(username="testuser")
         self.assertEqual(test_user.settings.notes_enabled, False)
@@ -375,11 +375,11 @@ class SettingsPageCase(StaticLiveServerTestCase):
         notes_input = self.selenium.find_element(By.NAME, "notes_preset_1")
         notes_input.click()
 
-        submit_button = self.selenium.find_element(By.NAME, "submit_button")
+        save_button = self.selenium.find_element(By.NAME, "save_button")
         wait = WebDriverWait(self.selenium, timeout=5)
-        submit_button.click()
+        save_button.click()
 
-        wait.until(lambda _ : "saved" in submit_button.get_attribute("class"))
+        wait.until(lambda _ : "saved" in save_button.get_attribute("class"))
 
         test_user = User.objects.get(username="testuser")
         self.assertEqual(test_user.settings.preset_notes.name, "test name")

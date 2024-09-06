@@ -1,7 +1,7 @@
 {% extends navbar_template|default:'registration/logged_in_base.html' %}
 {% block content2 %}
 {% load tags %}
-<html>
+<html class="h-100">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,12 +17,12 @@
                 text-align: left;
             }
             textarea {
-                min-height: 100px;
+                min-height: 85px !important;
                 resize: none;
             }
         </style>
     </head>
-    <body>
+    <body class="h-100 d-flex flex-column">
         {% if not logged_in %}
             <div class="container">
                 <div class="row">
@@ -89,7 +89,7 @@
                     {% endif %}
                 </div>
             </div>
-            <div class="row mt-2">
+            <div class="row mt-2 mx-auto">
                 <ul class="list-group list-group-horizontal flex-wrap">
                     {% for w in words %}
                         <li class="list-group-item border-0" id="{{ w }}_word" style="padding: 5px 10px;">
@@ -98,18 +98,18 @@
                     {% endfor %}
                 </ul>
             </div>
-            <div class="row">
+            <div class="row mx-auto">
                 <ul class="list-group list-group-horizontal flex-wrap">
                     {% for l in "ABCDEFGHIJKLMNOPQRSTUVWXY" %}
-                        <li class="list-group-item border-0" id="{{ l }}_remaining_letter" style="padding: 5px 10px">
+                        <li class="list-group-item border-0" id="{{ l }}_remaining_letter" style="padding: 5px 8px">
                             <p class="mb-0" name="{{ l }}_remaining_letter">{{ l }}</p>
                         </li>
                     {% endfor %}
                 </ul>
             </div>
-            <div class="row mt-3">
-                <p>Source: <a href="{{ url }}">{{ url }}</a></p>
-            </div>
+        </div>
+        <div class="container mt-auto mb-2">
+            <a class="text-decoration-none p-2" href="{{ url }}">Puzzle Source</a>
         </div>
         <script>
             // When save button is clicked add a "clicked" attribute

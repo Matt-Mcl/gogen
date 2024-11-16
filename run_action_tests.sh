@@ -3,6 +3,11 @@
 export DJANGO_SETTINGS_MODULE=gogensite.settings
 export TESTING="True"
 
+cd /home/ubuntu/gogen/test-gogen-app
+
+git fetch
+git reset --hard origin/master
+
 if [ ! -d venv ]; then
     echo "venv not present - creating" 
     python3 -m venv venv
@@ -11,6 +16,8 @@ if [ ! -d venv ]; then
     pip install --upgrade pip
     pip install -r requirements.txt
 fi
+
+source "venv/bin/activate"
 
 cd gogensite
 

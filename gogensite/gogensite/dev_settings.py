@@ -33,7 +33,7 @@ PG_CONNECTION = f"dbname={os.getenv('PG_PUZZLE_DBNAME')} user={os.getenv('PG_PUZ
 
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "test.manysite.net", "gogen.manysite.net", "gogen.matt.mcl.oughl.in"]
+ALLOWED_HOSTS = ["localhost", "test.manysite.net", "gogen.manysite.net", "gogen.matt.beer"]
 
 # Application definition
 
@@ -61,7 +61,7 @@ CSRF_TRUSTED_ORIGINS = [
     'http://*.localhost/*',
     'http://*.127.0.0.1/*',
     'https://*.manysite.net/*',
-    'https://*.matt.mcl.oughl.in'
+    'https://*.matt.beer',
 ]
 
 ROOT_URLCONF = 'gogensite.urls'

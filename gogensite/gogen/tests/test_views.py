@@ -226,6 +226,11 @@ class PuzzlePageLoggedOutCase(StaticLiveServerTestCase):
 
         alert.accept()
 
+        time.sleep(1)
+        wait_for_title(self.selenium, "Daily Uber")
+
+        letter_input = self.selenium.find_element(By.NAME, "01_board_letter")
+        notes_input = self.selenium.find_element(By.ID, "notes_box")
         self.assertEqual(letter_input.get_attribute("value"), '')
         self.assertEqual(notes_input.get_attribute("value"), '')
 

@@ -35,6 +35,7 @@ class PuzzleLog(models.Model):
 class Settings(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     notes_enabled = models.BooleanField(default=True)
+    fill_vowels_enabled = models.BooleanField(default=False)
     preset_notes = models.ForeignKey('NoteTemplate', on_delete=models.CASCADE, null=True, blank=True)
 
 

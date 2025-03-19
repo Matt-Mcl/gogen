@@ -128,6 +128,12 @@ def settings_view(request):
             user_settings.notes_enabled = True
         else:
             user_settings.notes_enabled = False
+
+        if request.POST.get("fill_vowels_enabled") == "on":
+            user_settings.fill_vowels_enabled = True
+        else:
+            user_settings.fill_vowels_enabled = False
+        
         
         # If a notes preset is selected
         notes_preset = [x for x in request.POST.keys() if "notes_preset" in x]
@@ -147,6 +153,7 @@ def settings_view(request):
         template_name="gogen/settings.html",
         context={
             'notes_value': user_settings.notes_enabled,
+            'fill_vowels_value': user_settings.fill_vowels_enabled,
             'presets': presets,
             'selected_preset': user_settings.preset_notes,
             'page_heading': "Gogen Settings",

@@ -29,6 +29,9 @@
                             </li>
                         {% endfor %}
                     </ul>
+                    <input class="form-check-input" type="checkbox" id="fill_vowels_enabled" name="fill_vowels_enabled" {% if fill_vowels_value %}checked{% endif %}></input>
+                    <label class="form-check-label" for="fill_vowels_enabled">Automatically get vowel hints in notes</label>
+                    <br>
                     <br>
                     <button class="btn btn-primary savebutton" type="submit" name="save_button">Save</button>
                 </form>
@@ -79,6 +82,19 @@
             $('input[type="radio"][data-group="' + groupName + '"]').not(this).prop('checked', false);
         });
 
+        // Disable and uncheck fill_vowels_enabled when notes_enabled is unchecked
+        $('#notes_enabled').change(function() {
+            if (!this.checked) {
+                $('#fill_vowels_enabled').prop('checked', false).prop('disabled', true);
+            } else {
+                $('#fill_vowels_enabled').prop('disabled', false);
+            }
+        });
+
+        // Initial check to set the correct state on page load
+        if (!$('#notes_enabled').is(':checked')) {
+            $('#fill_vowels_enabled').prop('checked', false).prop('disabled', true);
+        }
     </script>
 </html>
 {% endblock %}

@@ -118,6 +118,24 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
     if user_settings.preset_notes is not None and notes == "":
         notes = user_settings.preset_notes.template
 
+    # If the user has fill vowel hints enabled, add them to the notes
+    if user_settings.fill_vowels_enabled:
+        # If notes are empty or the preset notes are unchanged, add vowel hints
+        if notes == "" or (user_settings.preset_notes is not None and notes == user_settings.preset_notes.template):
+            for vowel in ['A', 'E', 'I', 'O', 'U', 'Y']:
+                added_hints = []
+                for word in words:
+                    for i, letter in enumerate(word):
+                        if letter.upper() != vowel:
+                            # If the letter is not already in the notes and the letter before or after it is a vowel
+                            if letter.upper() not in added_hints and ((i > 0 and word[i-1].upper() == vowel) or (i < len(word)-1 and word[i+1].upper() == vowel)):
+                                added_hints.append(letter.upper())
+                                # Add the hint to the notes if it's not already there, otherwise add to the existing hint
+                                if f"{vowel}: " not in notes:
+                                    notes += f"{vowel}: {letter.upper()}\n"
+                                else:
+                                    notes = re.sub(f"{vowel}: ", f"{vowel}: {letter.upper()}", notes)
+
     return render(
         request=request,
         template_name='gogen/puzzle.html',
@@ -133,7 +151,6 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
             'puzzle_count': puzzle_count * 3,
             'next_puzzle_url': get_next_puzzle(request, puzzle_type, puzzle_date),
             'notes_enabled': user_settings.notes_enabled,
-            'preset_notes': user_settings.preset_notes
         }
     )
 

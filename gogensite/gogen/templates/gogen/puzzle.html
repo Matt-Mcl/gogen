@@ -187,10 +187,12 @@
                         form_input.value = "";
                         form_input.placeholder = "";
                     });
-                    document.getElementById("notes_box").value = `{{ preset_notes.template }}`;
+                    document.getElementById("notes_box").value = "";
                     update_remaining_letters()
                     const saveButton = document.getElementsByName("save_button")[0];
                     saveButton.click();
+                    // Force reload the page to reset the form and get a new notes preset
+                    location.reload();
                 }
             });
 

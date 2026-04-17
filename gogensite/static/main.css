@@ -5,10 +5,220 @@
   --mcl4: #5AB2FF;
 }
 
-.mcl-bg2 {
-  background-color: var(--mcl2) !important;
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: #f4faff;
+  color: #1a2b3c;
 }
 
+/* ===== Navbar ===== */
+.mcl-navbar {
+  background: linear-gradient(90deg, var(--mcl3) 0%, var(--mcl4) 100%) !important;
+  box-shadow: 0 2px 10px rgba(90, 178, 255, 0.35);
+}
+
+.mcl-navbar .navbar-brand {
+  font-weight: 700;
+  font-size: 1.35rem;
+  color: #0a2540 !important;
+  letter-spacing: 0.3px;
+  text-decoration: none;
+}
+
+.mcl-navbar .navbar-brand:hover {
+  color: #fff !important;
+}
+
+.mcl-navbar .nav-link {
+  color: #0a2540 !important;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: background-color 0.2s, color 0.2s;
+  padding: 0.4rem 0.85rem !important;
+}
+
+.mcl-navbar .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+  color: #0a2540 !important;
+}
+
+.mcl-navbar .navbar-toggler {
+  border-color: rgba(10, 37, 64, 0.3);
+}
+
+.mcl-navbar .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2810%2C 37%2C 64%2C 0.9%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* ===== Page title ===== */
+.page-title {
+  font-weight: 700;
+  color: #0a2540;
+  border-bottom: 3px solid var(--mcl4);
+  padding-bottom: 0.35rem;
+  display: inline-block;
+}
+
+/* ===== Content card ===== */
+.content-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 18px rgba(90, 178, 255, 0.13);
+  padding: 1.5rem 2rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* ===== Puzzle grid ===== */
+.puzzle-grid {
+  width: 100% !important;
+  margin-bottom: 0 !important;
+  border-collapse: separate !important;
+  border-spacing: 3px !important;
+}
+
+.puzzle-grid td {
+  width: auto;
+  height: auto;
+  min-width: unset;
+  padding: 4px !important;
+  border: 2px solid var(--mcl3) !important;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.15rem;
+  vertical-align: middle;
+  background-color: #fff;
+  transition: background-color 0.15s;
+}
+
+.puzzle-grid td.given-cell {
+  background-color: var(--mcl2);
+  color: #0a2540;
+}
+
+.puzzle-grid .letter_input {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 0 !important;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent;
+  text-align: center;
+  caret-color: transparent;
+}
+
+.puzzle-grid .letter_input:focus {
+  background-color: rgba(90, 178, 255, 0.18);
+  border-radius: 4px;
+}
+
+.puzzle-grid td:has(.letter_input:focus) {
+  border-color: var(--mcl4) !important;
+  background-color: rgba(90, 178, 255, 0.10);
+  box-shadow: 0 0 0 3px rgba(90, 178, 255, 0.25);
+}
+
+/* ===== Word and remaining-letter lists ===== */
+.word-list,
+.remaining-letters {
+  background: var(--mcl1);
+  border-radius: 10px;
+  padding: 6px 4px;
+  margin-top: 8px;
+}
+
+/* ===== Notes box ===== */
+#notes_box {
+  border: 2px solid var(--mcl3);
+  border-radius: 10px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#notes_box:focus {
+  border-color: var(--mcl4);
+  box-shadow: 0 0 0 0.2rem rgba(90, 178, 255, 0.2);
+}
+
+/* ===== Puzzle list table ===== */
+.puzzle-list-table thead th {
+  background-color: var(--mcl3);
+  color: #0a2540;
+  font-weight: 600;
+  border: none !important;
+}
+
+.puzzle-list-table tbody tr:hover {
+  background-color: var(--mcl1);
+}
+
+.status-badge {
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.status-complete {
+  background-color: #d1f2eb;
+  color: #1a6640;
+}
+
+.status-incomplete {
+  background-color: #f0f0f0;
+  color: #999;
+}
+
+/* ===== Leaderboard ===== */
+.leaderboard-table thead th {
+  background-color: var(--mcl3);
+  color: #0a2540;
+  font-weight: 600;
+  border: none !important;
+}
+
+.leaderboard-table tbody tr:hover {
+  background-color: var(--mcl1);
+}
+
+.rank-gold td {
+  background-color: #fffbe6 !important;
+  font-weight: 600;
+}
+
+.rank-silver td {
+  background-color: #f5f5f5 !important;
+  font-weight: 600;
+}
+
+.rank-bronze td {
+  background-color: #fff4ec !important;
+  font-weight: 600;
+}
+
+/* ===== Auth card (login / register) ===== */
+.auth-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(90, 178, 255, 0.15);
+  padding: 2rem 2.5rem;
+}
+
+/* ===== Settings card ===== */
+.settings-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 18px rgba(90, 178, 255, 0.13);
+  padding: 1.5rem 2rem;
+  max-width: 480px;
+}
+
+/* ===== Save / submit button feedback ===== */
 .savebutton {
   transition: 0.5s;
 }
@@ -28,6 +238,7 @@
   animation: changeColor 5s forwards;
 }
 
+/* ===== Fading heading on submit ===== */
 .fadingHeading {
   opacity: 1;
   animation: fadeOut 1s 5s forwards;
@@ -38,13 +249,21 @@
     opacity: 0;
   }
 }
+
 @keyframes changeColor {
   0% {
     border-color: #db3545;
     background-color: #db3545;
   }
   100% {
-    border-color: "";
-    background-color: "";
+    border-color: transparent;
+    background-color: transparent;
   }
+}
+
+/* ===== Footer credit ===== */
+.puzzle-credit {
+  color: #888;
+  font-size: 0.85rem;
+  margin-top: 1.5rem;
 }

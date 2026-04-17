@@ -7,10 +7,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{{ page_heading }}</title>
         <style>
-            input {
-                text-align: center;
-                caret-color: transparent;
-            }
             input[type="text"]::placeholder {
                 font-size: 12px;
                 color: #B2BEB5;
@@ -33,7 +29,7 @@
         <div class="container">
             <div class="row">
                 <div class="col">
-                    <h2 class="my-4">
+                    <h2 class="my-4 page-title">
                         {{ page_heading }}
                     </h2>
                 </div>
@@ -49,14 +45,14 @@
                     <form method="post" id="letters_form">
                         {% csrf_token %}
                         <input type="hidden" name="url" value="{{ url }}" />
-                        <table class="table table-bordered">
+                        <table class="table table-bordered puzzle-grid">
                             {% for row in board|zip:placeholders %}
                                 <tr>
                                     {% for board_cell, placeholder_cell in row|tuplezip %}
                                         {% if board_cell|make_list|first == "*" %}
                                             <td class="text-center"><input type="text" class="form-control letter_input" maxlength="1" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}_board_letter" value="{{ board_cell|slice:"1:" }}" oninput="this.value = this.value.toUpperCase()" placeholder={{ placeholder_cell }}></input></td>
                                         {% elif board_cell %}
-                                            <td class="text-center" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}_board_letter" value="{{board_cell}}">{{ board_cell }}</td>
+                                            <td class="text-center given-cell" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}_board_letter" value="{{board_cell}}">{{ board_cell }}</td>
                                         {% else %}
                                             <td class="text-center"><input type="text" class="form-control letter_input" maxlength="1" name="{{ forloop.parentloop.counter0 }}{{ forloop.counter0 }}_board_letter" oninput="this.value = this.value.toUpperCase()" placeholder={{ placeholder_cell }}></input></td>
                                         {% endif %}
@@ -64,6 +60,7 @@
                                 </tr>
                             {% endfor %}
                         </table>
+                        <div class="d-flex flex-wrap gap-2 mt-3">
                         {% if mistake %}
                             <button class="btn btn-primary submitbutton" type="submit" name="submit_button">Submit</button>
                         {% else %}
@@ -74,13 +71,14 @@
                         {% else %}
                             <button class="btn btn-secondary savebutton" type="submit" name="save_button" disabled>Save</button>
                         {% endif %}
-                        <button class="btn btn-secondary" type="button" name="reset_button">Reset</button>
+                        <button class="btn btn-outline-secondary" type="button" name="reset_button">Reset</button>
                         <button class="btn btn-danger" type="button" name="ghost_button">Ghost</button>
                         {% if next_puzzle_url != None %}
-                            <a href={{ next_puzzle_url }}><button class="btn btn-secondary" type="button" name="next_button" onclick=saveButton.click();>Next ></button></a>
+                            <a href="{{ next_puzzle_url }}"><button class="btn btn-secondary" type="button" name="next_button" onclick=saveButton.click();>Next ›</button></a>
                         {% else %}
-                            <button class="btn btn-secondary" type="button" name="next_button" disabled>Next ></button>
+                            <button class="btn btn-secondary" type="button" name="next_button" disabled>Next ›</button>
                         {% endif %}
+                        </div>
                     </form>
                 </div>
                 <div class="col-sm-4">
@@ -90,18 +88,18 @@
                 </div>
             </div>
             <div class="row mt-2 mx-auto">
-                <ul class="list-group list-group-horizontal flex-wrap">
+                <ul class="list-group list-group-horizontal flex-wrap word-list">
                     {% for w in words %}
-                        <li class="list-group-item border-0" id="{{ w }}_word" style="padding: 5px 10px;">
+                        <li class="list-group-item border-0" id="{{ w }}_word" style="padding: 5px 10px; background: transparent;">
                             <b name="{{ l }}_word">{{ w }}</b>
                         </li>
                     {% endfor %}
                 </ul>
             </div>
             <div class="row mx-auto">
-                <ul class="list-group list-group-horizontal flex-wrap">
+                <ul class="list-group list-group-horizontal flex-wrap remaining-letters">
                     {% for l in "ABCDEFGHIJKLMNOPQRSTUVWXY" %}
-                        <li class="list-group-item border-0" id="{{ l }}_remaining_letter" style="padding: 5px 8px">
+                        <li class="list-group-item border-0" id="{{ l }}_remaining_letter" style="padding: 5px 8px; background: transparent;">
                             <p class="mb-0" name="{{ l }}_remaining_letter">{{ l }}</p>
                         </li>
                     {% endfor %}

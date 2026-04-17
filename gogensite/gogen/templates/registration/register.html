@@ -12,14 +12,15 @@
             <div class="container">
                 <div class="row">
                     <div class="col-md-12 col-centered">
-                        <h1 class="mt-5 mb-3">Register</h1>
+                        <h1 class="mt-5 mb-3 page-title">Register</h1>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6 offset-md-3 mt-3">
+                        <div class="auth-card">
                         <form method="post" action="{% url 'register' %}">
                             {% csrf_token %} {% for field in form %}
-                            <div class="form-group">
+                            <div class="form-group mb-3">
                                 {{ field.label_tag }}
                                 <input
                                     type="{% if 'password' in field.label_tag %}password{% else %}text{% endif %}"
@@ -38,6 +39,7 @@
                             <br>
                             <button type="submit" name="register_button" class="btn btn-primary mt-2">Register</button>
                         </form>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -8,9 +8,11 @@
     </head>
     <body>
         <div class="container">
-            <h2 class="my-4">{{ page_heading }}</h2>
+            <h2 class="my-4 page-title">{{ page_heading }}</h2>
+            <div class="content-card">
             <div class="row">
-                <table class="table" name="leaderboard_table">
+                <table class="table leaderboard-table" name="leaderboard_table">
+                    <thead>
                     <tr>
                         <th>#</th>
                         <th>Name</th>
@@ -19,9 +21,13 @@
                         <th>Hypers Solved</th>
                         <th>Total</th>
                     </tr>
+                    </thead>
+                    <tbody>
                     {% for item in users_and_scores %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
+                        <tr class="{% if forloop.counter == 1 %}rank-gold{% elif forloop.counter == 2 %}rank-silver{% elif forloop.counter == 3 %}rank-bronze{% endif %}">
+                            <td>
+                                {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}{% endif %}
+                            </td>
                             <td>{{ item.0 }}</td>
                             <td>{{ item.1 }}</td>
                             <td>{{ item.2 }}</td>
@@ -29,10 +35,12 @@
                             <td>{{ item.4 }}</td>
                         </tr>
                     {% endfor %}
+                    </tbody>
                 </table>
             </div>
+            </div><!-- .content-card -->
             <div class="row">
-                <p>All puzzle credit goes to Paul Alan Grosse here: <a href="http://www.puzzles.grosse.is-a-geek.com/uberarchive.html">http://www.puzzles.grosse.is-a-geek.com/uberarchive.html</a></p>
+                <p class="puzzle-credit">All puzzle credit goes to Paul Alan Grosse here: <a href="http://www.puzzles.grosse.is-a-geek.com/uberarchive.html">http://www.puzzles.grosse.is-a-geek.com/uberarchive.html</a></p>
             </div>
         </div>
     </body>

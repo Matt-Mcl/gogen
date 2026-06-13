@@ -33,7 +33,7 @@ PG_CONNECTION = f"dbname={os.getenv('PG_PUZZLE_DBNAME')} user={os.getenv('PG_PUZ
 
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "test.manysite.net", "gogen.manysite.net", "gogen.matt.beer"]
+ALLOWED_HOSTS = ["localhost", "test.manysite.net", "gogen.manysite.net", "gogen.matt.beer", "gogen.matt.cat"]
 
 # Application definition
 
@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
     'gogen'
 ]
 
@@ -62,6 +63,7 @@ CSRF_TRUSTED_ORIGINS = [
     'http://*.127.0.0.1/*',
     'https://*.manysite.net/*',
     'https://*.matt.beer',
+    'https://*.matt.cat',
 ]
 
 ROOT_URLCONF = 'gogensite.urls'

@@ -28,9 +28,5 @@ PG_HOST=<PG_HOST>
 PG_PORT=<PG_PORT>
 ```
 
-For tests:
-```bash
-sudo apt-get install chromium-browser
-```
-This should automatically install the browser as well as the driver. (ensure snap is installed)
-Check that `/snap/bin/chromium.chromedriver` exists.
+Tests:
+Web driver manager should now automatically handle installing the chrome web driver.

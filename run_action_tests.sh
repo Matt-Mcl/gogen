@@ -1,12 +1,8 @@
 #!/bin/bash
 
 export DJANGO_SETTINGS_MODULE=gogensite.settings
+# Ensure we use test db
 export TESTING="True"
-
-cd /home/ubuntu/gogen/test-gogen-app
-
-git fetch
-git reset --hard origin/master
 
 if [ ! -d venv ]; then
     echo "venv not present - creating" 
@@ -21,7 +17,13 @@ source "venv/bin/activate"
 
 cd gogensite
 
-cp ../../prod-gogen-app/gogensite/.env .env
+# Check env file exists at prod path and throw relevant error
+if [ ! -f ~/gogen/prod-gogen-app/gogensite/.env ]; then
+    echo ".env file not found at prod path. Please ensure the .env file is present at ~/gogen/prod-gogen-app/gogensite/.env."
+    exit 1
+fi
+
+cp ~/gogen/prod-gogen-app/gogensite/.env .env
 
 python3 manage.py makemigrations
 

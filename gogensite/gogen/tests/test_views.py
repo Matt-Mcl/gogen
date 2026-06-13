@@ -1,13 +1,13 @@
 from gogen.models import *
-from datetime import datetime, timedelta
+from datetime import datetime
 from selenium import webdriver
-from django.test import Client
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import ElementClickInterceptedException
 from selenium.webdriver.support.wait import WebDriverWait
+from webdriver_manager.chrome import ChromeDriverManager
 from ..helpers import test_helper
 import time
 
@@ -33,14 +33,13 @@ class RegisterLoginPageCase(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        service = Service("/snap/bin/chromium.chromedriver")
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument('--remote-debugging-pipe')
-        cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
+        cls.selenium = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         cls.selenium.implicitly_wait(10)
 
     @classmethod
@@ -93,14 +92,13 @@ class DailyUberCase(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        service = Service("/snap/bin/chromium.chromedriver")
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument('--remote-debugging-pipe')
-        cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
+        cls.selenium = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         cls.selenium.implicitly_wait(10)
 
     @classmethod
@@ -183,14 +181,13 @@ class PuzzlePageLoggedOutCase(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        service = Service("/snap/bin/chromium.chromedriver")
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument('--remote-debugging-pipe')
-        cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
+        cls.selenium = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         cls.selenium.implicitly_wait(10)
 
     @classmethod
@@ -240,14 +237,13 @@ class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        service = Service("/snap/bin/chromium.chromedriver")
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument('--remote-debugging-pipe')
-        cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
+        cls.selenium = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         cls.selenium.implicitly_wait(10)
 
     @classmethod
@@ -378,14 +374,13 @@ class SettingsPageCase(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        service = Service("/snap/bin/chromium.chromedriver")
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument('--remote-debugging-pipe')
-        cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
+        cls.selenium = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         cls.selenium.implicitly_wait(10)
         NoteTemplate.objects.create(name="test name", template="test template")
 
@@ -453,14 +448,13 @@ class LeaderboardPageCase(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        service = Service("/snap/bin/chromium.chromedriver")
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument('--remote-debugging-pipe')
-        cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
+        cls.selenium = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         cls.selenium.implicitly_wait(10)
 
     @classmethod
@@ -503,14 +497,13 @@ class PuzzleListPageCase(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        service = Service("/snap/bin/chromium.chromedriver")
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--window-size=1920,1080")
         chrome_options.add_argument('--remote-debugging-pipe')
-        cls.selenium = webdriver.Chrome(options=chrome_options, service=service)
+        cls.selenium = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         cls.selenium.implicitly_wait(10)
 
     @classmethod

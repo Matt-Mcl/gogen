@@ -17,9 +17,10 @@ jobs:
         key: ${{ secrets.KEY }}
         port: ${{ secrets.PORT }}
         script: |
-          cd gogen
+          cd /tmp
           rm -rf test-gogen-app
           git clone https://github.com/Matt-Mcl/gogen test-gogen-app
           cd test-gogen-app
+          echo "Checking out PR branch: ${{github.event.pull_request.head.ref}}"
           git checkout ${{github.event.pull_request.head.ref}}
           bash run_action_tests.sh

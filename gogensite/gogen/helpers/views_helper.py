@@ -75,44 +75,29 @@ def get_next_puzzle(request, puzzle_type, puzzle_date):
     return next_puzzle_url
 
 
-def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
+def load_saved_progress(request, puzzle_type, puzzle_date, board):
+    """Overlay whatever the user has already filled in on top of a fresh board."""
 
-    url = f"http://www.puzzles.grosse.is-a-geek.com/images/gog/puz/{puzzle_type}/{puzzle_type}{puzzle_date}puz.png"
-    puzzle_count = 0
-
-    # Pull the puzzle from the database + get the count for the puzzle type
-    with psycopg.connect(settings.PG_CONNECTION) as conn:
-        with conn.cursor() as cur:
-            cur.execute(f"SELECT COUNT(*) FROM {puzzle_type};")
-            puzzle_count = cur.fetchone()[0]
-
-            cur.execute(f"SELECT * FROM {puzzle_type} WHERE puzzle_url = '{url}';")
-            puzzle = cur.fetchone()
-            if puzzle is None:
-                cur.execute(f"SELECT * FROM {puzzle_type} ORDER BY puzzle_name DESC LIMIT 1;")
-                puzzle = cur.fetchone()
-                page_heading = puzzle[0].capitalize()
-
-    url = puzzle[1]
-    words = puzzle[3]
-    board = puzzle[4]
     notes = ""
     placeholders = [["" for _ in range(5)] for _ in range(5)]
     navbar_template = 'registration/logged_out_base.html'
 
-    # If logged in, get the user's puzzlelog data for the given puzzle
     if request.user.id is not None:
         navbar_template = 'registration/logged_in_base.html'
 
         user_puzzle_log = PuzzleLog.objects.filter(puzzle_type=puzzle_type, puzzle_date=puzzle_date, user=request.user)
-        
+
         # If user has already filled some letters out, add them to the board
         if user_puzzle_log.count() > 0:
             board = user_puzzle_log[0].board
             placeholders = user_puzzle_log[0].placeholders
             notes = user_puzzle_log[0].notes
 
-    user_settings = get_user_settings(request)
+    return board, placeholders, notes, navbar_template
+
+
+def apply_notes_settings(words, notes, user_settings):
+    """Seed the notes box from the user's preset and vowel hint settings."""
 
     # If user has a notes preset and puzzle hasn't been attempted yet, set notes as the preset
     if user_settings.preset_notes is not None and notes == "":
@@ -135,6 +120,36 @@ def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
                                     notes += f"{vowel}: {letter.upper()}\n"
                                 else:
                                     notes = re.sub(f"{vowel}: ", f"{vowel}: {letter.upper()}", notes)
+
+    return notes
+
+
+def get_puzzle(request, puzzle_type, puzzle_date, page_heading):
+
+    url = f"http://www.puzzles.grosse.is-a-geek.com/images/gog/puz/{puzzle_type}/{puzzle_type}{puzzle_date}puz.png"
+    puzzle_count = 0
+
+    # Pull the puzzle from the database + get the count for the puzzle type
+    with psycopg.connect(settings.PG_CONNECTION) as conn:
+        with conn.cursor() as cur:
+            cur.execute(f"SELECT COUNT(*) FROM {puzzle_type};")
+            puzzle_count = cur.fetchone()[0]
+
+            cur.execute(f"SELECT * FROM {puzzle_type} WHERE puzzle_url = '{url}';")
+            puzzle = cur.fetchone()
+            if puzzle is None:
+                cur.execute(f"SELECT * FROM {puzzle_type} ORDER BY puzzle_name DESC LIMIT 1;")
+                puzzle = cur.fetchone()
+                page_heading = puzzle[0].capitalize()
+
+    url = puzzle[1]
+    words = puzzle[3]
+    board = puzzle[4]
+
+    board, placeholders, notes, navbar_template = load_saved_progress(request, puzzle_type, puzzle_date, board)
+
+    user_settings = get_user_settings(request)
+    notes = apply_notes_settings(words, notes, user_settings)
 
     return render(
         request=request,
@@ -268,5 +283,168 @@ def post_puzzle(request, page_heading):
             'logged_in': request.user.id is not None,
             'next_puzzle_url': get_next_puzzle(request, puzzle_type, puzzle_date),
             'notes_enabled': user_settings.notes_enabled
+        }
+    )
+
+
+# Puzzles built by gogenmaker rather than scraped from the archive. They live in
+# their own table and are addressed by generation seed, so /uber1 is seed 1.
+GENERATED_TABLE = "uber_generated"
+GENERATED_TYPE = "uber_generated"
+
+
+def fetch_generated_puzzle(seed):
+    """Return (puzzle_row, puzzle_count). The row is None if that seed is absent."""
+
+    try:
+        with psycopg.connect(settings.PG_CONNECTION) as conn:
+            with conn.cursor() as cur:
+                cur.execute(f"SELECT COUNT(*) FROM {GENERATED_TABLE};")
+                puzzle_count = cur.fetchone()[0]
+
+                cur.execute(f"SELECT * FROM {GENERATED_TABLE} WHERE puzzle_name = %s;", (f"uber{seed}",))
+                puzzle = cur.fetchone()
+    except psycopg.errors.UndefinedTable:
+        # No puzzles have been generated yet, so there is nothing to serve
+        return None, 0
+
+    return puzzle, puzzle_count
+
+
+def get_next_generated_puzzle(seed):
+    """The following seed, if it has been generated."""
+
+    try:
+        with psycopg.connect(settings.PG_CONNECTION) as conn:
+            with conn.cursor() as cur:
+                cur.execute(f"SELECT 1 FROM {GENERATED_TABLE} WHERE puzzle_name = %s;", (f"uber{seed + 1}",))
+                exists = cur.fetchone() is not None
+    except psycopg.errors.UndefinedTable:
+        return None
+
+    return f"/uber{seed + 1}" if exists else None
+
+
+def apply_submission(post_items, solution_board):
+    """Copy the letters the user entered over a copy of the solution.
+
+    Given cells are not form inputs, so they are never posted back and keep
+    their solved value. If the user's letters are wrong, the board that comes
+    out no longer matches the solution.
+    """
+
+    letters = deepcopy(solution_board)
+
+    for name, value in post_items:
+        if name.endswith("_board_letter"):
+            letters[int(name[0])][int(name[1])] = value[:1].upper()
+
+    return letters
+
+
+def get_generated_puzzle(request, seed, page_heading):
+
+    puzzle, puzzle_count = fetch_generated_puzzle(seed)
+
+    if puzzle is None:
+        return HttpResponseNotFound(f"Generated puzzle {seed} does not exist.")
+
+    url = puzzle[1]
+    words = puzzle[3]
+    board = puzzle[4]
+
+    board, placeholders, notes, navbar_template = load_saved_progress(request, GENERATED_TYPE, str(seed), board)
+
+    user_settings = get_user_settings(request)
+    notes = apply_notes_settings(words, notes, user_settings)
+
+    return render(
+        request=request,
+        template_name='gogen/puzzle.html',
+        context={
+            'url': url,
+            'words': words,
+            'board': board,
+            'placeholders': placeholders,
+            'notes': notes,
+            'page_heading': page_heading,
+            'navbar_template': navbar_template,
+            'logged_in': request.user.id is not None,
+            'puzzle_count': puzzle_count,
+            'next_puzzle_url': get_next_generated_puzzle(seed),
+            'notes_enabled': user_settings.notes_enabled,
+        }
+    )
+
+
+def post_generated_puzzle(request, seed, page_heading):
+
+    puzzle, puzzle_count = fetch_generated_puzzle(seed)
+
+    if puzzle is None:
+        return HttpResponseNotFound(f"Generated puzzle {seed} does not exist.")
+
+    url = puzzle[1]
+    words = puzzle[3]
+    solution_board = puzzle[5]
+
+    post_items = list(request.POST.items())
+
+    # Create 2D array of placeholders
+    placeholders = [["" for _ in range(5)] for _ in range(5)]
+    for i, v in enumerate(post_items.pop()[1].split(',')):
+        placeholders[i//5][i%5] = v
+
+    notes = post_items.pop()[1]
+
+    user_settings = get_user_settings(request)
+    navbar_template = 'registration/logged_in_base.html' if request.user.id is not None else 'registration/logged_out_base.html'
+
+    letters = apply_submission(post_items, solution_board)
+    complete = letters == solution_board
+    mistake = not complete
+
+    if mistake:
+        # Loop through each cell in the board and flag user changes with an asterisk
+        for i in range(0, 5):
+            for j, v in enumerate(zip(letters[i], puzzle[4][i])):
+                if v[0] != v[1] or v[0] == "":
+                    letters[i][j] = f"*{letters[i][j]}"
+
+    # If logged in save the puzzlelog to the database
+    if request.user.id is not None:
+        user_puzzle_log, notes = get_puzzle_log(GENERATED_TYPE, str(seed), request, notes, user_settings)
+        status = 'C' if complete else 'I'
+
+        if user_puzzle_log.count() == 0:
+            puzzle_log = PuzzleLog(puzzle_type=GENERATED_TYPE, puzzle_date=str(seed), status=status, board=letters, placeholders=placeholders, notes=notes, user=request.user)
+            puzzle_log.save()
+        # Once a puzzle is complete it stays complete, so show the solved board again
+        elif mistake and user_puzzle_log[0].status == 'C':
+            mistake = False
+            complete = True
+            placeholders = user_puzzle_log[0].placeholders
+            letters = user_puzzle_log[0].board
+            notes = user_puzzle_log[0].notes
+        else:
+            user_puzzle_log.update(status=status, board=letters, placeholders=placeholders, notes=notes)
+
+    return render(
+        request=request,
+        template_name='gogen/puzzle.html',
+        context={
+            'url': url,
+            'words': words,
+            'board': letters,
+            'placeholders': placeholders,
+            'notes': notes,
+            'mistake': mistake,
+            'complete': complete,
+            'page_heading': page_heading,
+            'navbar_template': navbar_template,
+            'puzzle_count': puzzle_count,
+            'logged_in': request.user.id is not None,
+            'next_puzzle_url': get_next_generated_puzzle(seed),
+            'notes_enabled': user_settings.notes_enabled,
         }
     )

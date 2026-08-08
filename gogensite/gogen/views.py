@@ -31,17 +31,17 @@ def puzzle_view(request, puzzle_date, puzzle_type):
         return views_helper.post_puzzle(request, f"{puzzle_type.capitalize()}{puzzle_date}")
 
 
-def generated_puzzle_view(request, seed):
-    """Puzzles built by gogenmaker, addressed by generation seed: /uber1, /uber2..."""
+def generated_puzzle_view(request, puzzle_type, seed):
+    """Puzzles built by gogenmaker, addressed by generation seed: /uber1, /hyper2..."""
 
     seed = int(seed)
-    page_heading = f"Generated Uber {seed}"
+    page_heading = f"Generated {puzzle_type.capitalize()} {seed}"
 
     if request.method == "GET":
-        return views_helper.get_generated_puzzle(request, seed, page_heading)
+        return views_helper.get_generated_puzzle(request, puzzle_type, seed, page_heading)
 
     if request.method == "POST":
-        return views_helper.post_generated_puzzle(request, seed, page_heading)
+        return views_helper.post_generated_puzzle(request, puzzle_type, seed, page_heading)
 
 
 @login_required

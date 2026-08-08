@@ -287,42 +287,55 @@ def post_puzzle(request, page_heading):
     )
 
 
-# Puzzles built by gogenmaker rather than scraped from the archive. They live in
-# their own table and are addressed by generation seed, so /uber1 is seed 1.
-GENERATED_TABLE = "uber_generated"
-GENERATED_TYPE = "uber_generated"
+# Puzzles built by gogenmaker rather than scraped from the archive. Each type
+# lives in its own table and is addressed by generation seed, so /ultra1 is
+# ultra seed 1. The stored puzzle_type keeps their progress separate from the
+# archive's, so seed 1 never collides with a date.
+GENERATED_TYPES = ("uber", "ultra", "hyper")
 
 
-def fetch_generated_puzzle(seed):
+def generated_table(puzzle_type):
+    return f"{puzzle_type}_generated"
+
+
+def generated_log_type(puzzle_type):
+    return f"{puzzle_type}_generated"
+
+
+def fetch_generated_puzzle(puzzle_type, seed):
     """Return (puzzle_row, puzzle_count). The row is None if that seed is absent."""
+
+    table = generated_table(puzzle_type)
 
     try:
         with psycopg.connect(settings.PG_CONNECTION) as conn:
             with conn.cursor() as cur:
-                cur.execute(f"SELECT COUNT(*) FROM {GENERATED_TABLE};")
+                cur.execute(f"SELECT COUNT(*) FROM {table};")
                 puzzle_count = cur.fetchone()[0]
 
-                cur.execute(f"SELECT * FROM {GENERATED_TABLE} WHERE puzzle_name = %s;", (f"uber{seed}",))
+                cur.execute(f"SELECT * FROM {table} WHERE puzzle_name = %s;", (f"{puzzle_type}{seed}",))
                 puzzle = cur.fetchone()
     except psycopg.errors.UndefinedTable:
-        # No puzzles have been generated yet, so there is nothing to serve
+        # No puzzles of this type have been generated yet, so there is nothing to serve
         return None, 0
 
     return puzzle, puzzle_count
 
 
-def get_next_generated_puzzle(seed):
+def get_next_generated_puzzle(puzzle_type, seed):
     """The following seed, if it has been generated."""
+
+    table = generated_table(puzzle_type)
 
     try:
         with psycopg.connect(settings.PG_CONNECTION) as conn:
             with conn.cursor() as cur:
-                cur.execute(f"SELECT 1 FROM {GENERATED_TABLE} WHERE puzzle_name = %s;", (f"uber{seed + 1}",))
+                cur.execute(f"SELECT 1 FROM {table} WHERE puzzle_name = %s;", (f"{puzzle_type}{seed + 1}",))
                 exists = cur.fetchone() is not None
     except psycopg.errors.UndefinedTable:
         return None
 
-    return f"/uber{seed + 1}" if exists else None
+    return f"/{puzzle_type}{seed + 1}" if exists else None
 
 
 def apply_submission(post_items, solution_board):
@@ -342,18 +355,18 @@ def apply_submission(post_items, solution_board):
     return letters
 
 
-def get_generated_puzzle(request, seed, page_heading):
+def get_generated_puzzle(request, puzzle_type, seed, page_heading):
 
-    puzzle, puzzle_count = fetch_generated_puzzle(seed)
+    puzzle, puzzle_count = fetch_generated_puzzle(puzzle_type, seed)
 
     if puzzle is None:
-        return HttpResponseNotFound(f"Generated puzzle {seed} does not exist.")
+        return HttpResponseNotFound(f"Generated {puzzle_type} puzzle {seed} does not exist.")
 
     url = puzzle[1]
     words = puzzle[3]
     board = puzzle[4]
 
-    board, placeholders, notes, navbar_template = load_saved_progress(request, GENERATED_TYPE, str(seed), board)
+    board, placeholders, notes, navbar_template = load_saved_progress(request, generated_log_type(puzzle_type), str(seed), board)
 
     user_settings = get_user_settings(request)
     notes = apply_notes_settings(words, notes, user_settings)
@@ -371,18 +384,18 @@ def get_generated_puzzle(request, seed, page_heading):
             'navbar_template': navbar_template,
             'logged_in': request.user.id is not None,
             'puzzle_count': puzzle_count,
-            'next_puzzle_url': get_next_generated_puzzle(seed),
+            'next_puzzle_url': get_next_generated_puzzle(puzzle_type, seed),
             'notes_enabled': user_settings.notes_enabled,
         }
     )
 
 
-def post_generated_puzzle(request, seed, page_heading):
+def post_generated_puzzle(request, puzzle_type, seed, page_heading):
 
-    puzzle, puzzle_count = fetch_generated_puzzle(seed)
+    puzzle, puzzle_count = fetch_generated_puzzle(puzzle_type, seed)
 
     if puzzle is None:
-        return HttpResponseNotFound(f"Generated puzzle {seed} does not exist.")
+        return HttpResponseNotFound(f"Generated {puzzle_type} puzzle {seed} does not exist.")
 
     url = puzzle[1]
     words = puzzle[3]
@@ -413,11 +426,11 @@ def post_generated_puzzle(request, seed, page_heading):
 
     # If logged in save the puzzlelog to the database
     if request.user.id is not None:
-        user_puzzle_log, notes = get_puzzle_log(GENERATED_TYPE, str(seed), request, notes, user_settings)
+        user_puzzle_log, notes = get_puzzle_log(generated_log_type(puzzle_type), str(seed), request, notes, user_settings)
         status = 'C' if complete else 'I'
 
         if user_puzzle_log.count() == 0:
-            puzzle_log = PuzzleLog(puzzle_type=GENERATED_TYPE, puzzle_date=str(seed), status=status, board=letters, placeholders=placeholders, notes=notes, user=request.user)
+            puzzle_log = PuzzleLog(puzzle_type=generated_log_type(puzzle_type), puzzle_date=str(seed), status=status, board=letters, placeholders=placeholders, notes=notes, user=request.user)
             puzzle_log.save()
         # Once a puzzle is complete it stays complete, so show the solved board again
         elif mistake and user_puzzle_log[0].status == 'C':
@@ -444,7 +457,7 @@ def post_generated_puzzle(request, seed, page_heading):
             'navbar_template': navbar_template,
             'puzzle_count': puzzle_count,
             'logged_in': request.user.id is not None,
-            'next_puzzle_url': get_next_generated_puzzle(seed),
+            'next_puzzle_url': get_next_generated_puzzle(puzzle_type, seed),
             'notes_enabled': user_settings.notes_enabled,
         }
     )

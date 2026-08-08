@@ -34,7 +34,7 @@ urlpatterns = [
 
     # Generated puzzles are addressed by seed. Capped at 7 digits so it can
     # never collide with the 8 digit date above.
-    re_path(r'^uber(?P<seed>[1-9]\d{0,6})$', views.generated_puzzle_view, name='generated_puzzle_view'),
+    re_path(r'^(?P<puzzle_type>uber|hyper|ultra)(?P<seed>[1-9]\d{0,6})$', views.generated_puzzle_view, name='generated_puzzle_view'),
 
     path('', views.daily_view, name='daily_view'),
 ]

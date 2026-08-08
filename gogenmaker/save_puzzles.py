@@ -1,12 +1,18 @@
-"""Generate puzzles and save them to the uber_generated table.
+"""Generate puzzles and save them to the <type>_generated tables.
 
-A puzzle is identified by its seed, so seed 1 is always the same puzzle and is
-served at /uber1. Re-running this is safe: existing seeds are left alone unless
---replace is given.
+A puzzle is identified by its type and seed, so uber seed 1 is always the same
+puzzle and is served at /uber1. Re-running this is safe: existing seeds are
+left alone unless --replace is given.
+
+Ultra and Hyper get harder as the week goes on, so by default a seed's level
+cycles Monday to Sunday: seeds 1 to 7 run easiest to hardest, seed 8 starts
+over. Use --level to pin every seed to one difficulty instead. Uber has no
+levels - every published one gives away the same nine letters.
 
 Examples:
-    python save_puzzles.py 1 20          # seeds 1 to 20
-    python save_puzzles.py 5             # seed 5 only
+    python save_puzzles.py 1 20                    # uber seeds 1 to 20
+    python save_puzzles.py 1 20 --type ultra       # ultra, levels cycling
+    python save_puzzles.py 1 20 --type hyper --level 7
     python save_puzzles.py 1 10 --replace
 """
 
@@ -18,9 +24,18 @@ import sys
 import psycopg
 from dotenv import load_dotenv
 
-from generator import generate, load_words, puzzle_board
+from generator import LEVELS, generate, load_words, puzzle_board
 
-TABLE = "uber_generated"
+PUZZLE_TYPES = ("uber", "ultra", "hyper")
+
+
+def table_name(puzzle_type):
+    return f"{puzzle_type}_generated"
+
+
+def level_for(seed, level=None):
+    """Difficulty for a seed: fixed if given, otherwise cycling Monday to Sunday."""
+    return level if level is not None else (seed - 1) % 7 + 1
 
 
 def connection_string():
@@ -38,10 +53,10 @@ def connection_string():
     )
 
 
-def create_table(conn):
-    """Same shape as the uber table, so the site can read it the same way."""
+def create_table(conn, puzzle_type):
+    """Same shape as the scraped tables, so the site can read it the same way."""
     conn.execute(f"""
-        CREATE TABLE IF NOT EXISTS {TABLE}(
+        CREATE TABLE IF NOT EXISTS {table_name(puzzle_type)}(
         puzzle_name text NOT NULL PRIMARY KEY,
         puzzle_url text,
         solution_url text,
@@ -52,37 +67,39 @@ def create_table(conn):
     """)
 
 
-def existing_seeds(conn, seeds):
+def existing_seeds(conn, puzzle_type, seeds):
     """Which of `seeds` are already stored."""
-    names = [f"uber{seed}" for seed in seeds]
+    names = [f"{puzzle_type}{seed}" for seed in seeds]
     rows = conn.execute(
-        f"SELECT puzzle_name FROM {TABLE} WHERE puzzle_name = ANY(%s);", (names,)
+        f"SELECT puzzle_name FROM {table_name(puzzle_type)} WHERE puzzle_name = ANY(%s);",
+        (names,),
     ).fetchall()
 
-    return {int(row[0][4:]) for row in rows}
+    return {int(row[0][len(puzzle_type):]) for row in rows}
 
 
-def build(seed, words, rank, **options):
-    """Generate the puzzle for `seed`. The seed alone decides the puzzle."""
-    result = generate(words, rank, random.Random(seed), **options)
+def build(puzzle_type, seed, level, words, rank, **options):
+    """Generate the puzzle for `seed`. The type, seed and level decide it fully."""
+    result = generate(puzzle_type, level, words, rank, random.Random(seed), **options)
     if result is None:
-        raise RuntimeError(f"Could not generate a puzzle for seed {seed}")
+        raise RuntimeError(f"Could not generate a {puzzle_type} puzzle for seed {seed}")
 
-    grid, chosen, _ = result
+    grid, chosen, clues = result
 
     return {
-        "puzzle_name": f"uber{seed}",
+        "puzzle_name": f"{puzzle_type}{seed}",
         # There is no source image, so the URL doubles as the puzzle's address
         # on this site. The form posts it back to identify the puzzle.
-        "puzzle_url": f"/uber{seed}",
+        "puzzle_url": f"/{puzzle_type}{seed}",
         "solution_url": "",
         "words": chosen,
-        "puzzle_board": puzzle_board(grid),
+        # Hyper scatters its clues, so the given cells vary from puzzle to puzzle
+        "puzzle_board": puzzle_board(grid, clues.values()),
         "solution_board": grid,
     }
 
 
-def save(conn, puzzle, replace=False):
+def save(conn, puzzle, puzzle_type, replace=False):
     conflict = (
         """DO UPDATE SET puzzle_url = EXCLUDED.puzzle_url,
                          solution_url = EXCLUDED.solution_url,
@@ -94,7 +111,7 @@ def save(conn, puzzle, replace=False):
 
     conn.execute(
         f"""
-        INSERT INTO {TABLE}(puzzle_name, puzzle_url, solution_url,
+        INSERT INTO {table_name(puzzle_type)}(puzzle_name, puzzle_url, solution_url,
                             words, puzzle_board, solution_board)
         VALUES(%s, %s, %s, %s, %s, %s)
         ON CONFLICT (puzzle_name) {conflict};
@@ -106,16 +123,23 @@ def save(conn, puzzle, replace=False):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        description="Generate Uber-Gogen puzzles and save them to the database.")
+        description="Generate Gogen puzzles and save them to the database.")
     parser.add_argument("first", type=int, help="first seed")
     parser.add_argument("last", type=int, nargs="?",
                         help="last seed, inclusive (defaults to first)")
+    parser.add_argument("--type", choices=PUZZLE_TYPES, default="uber",
+                        help="which puzzle type to generate (default uber)")
+    parser.add_argument("--level", type=int, choices=list(LEVELS),
+                        help="pin every seed to one difficulty, 1 easiest to 7 hardest")
     parser.add_argument("--replace", action="store_true",
                         help="regenerate seeds that are already stored")
     parser.add_argument("--dsn", help="override the database connection string")
-    parser.add_argument("--min-words", type=int, default=9)
-    parser.add_argument("--max-words", type=int, default=11)
-    parser.add_argument("--min-coverage", type=int, default=20)
+    parser.add_argument("--min-words", type=int,
+                        help="fewest clue strings (defaults to suit the type and level)")
+    parser.add_argument("--max-words", type=int,
+                        help="most clue strings (defaults to suit the type and level)")
+    parser.add_argument("--min-coverage", type=int,
+                        help="fewest distinct letters the clues must show")
     args = parser.parse_args(argv)
 
     last = args.last if args.last is not None else args.first
@@ -123,21 +147,25 @@ def main(argv=None):
         parser.error("seeds start at 1")
     if last < args.first:
         parser.error("last seed cannot be before the first")
+    if args.min_words and args.max_words and args.min_words > args.max_words:
+        parser.error("--min-words cannot exceed --max-words")
 
+    puzzle_type = args.type
     seeds = range(args.first, last + 1)
-    options = {
-        "min_words": args.min_words,
-        "max_words": args.max_words,
-        "min_coverage": args.min_coverage,
-    }
+    # Leave each unset option to the per-type, per-level default
+    options = {name: value for name, value in (
+        ("min_words", args.min_words),
+        ("max_words", args.max_words),
+        ("min_coverage", args.min_coverage),
+    ) if value is not None}
 
     words, rank = load_words()
 
     with psycopg.connect(args.dsn or connection_string()) as conn:
-        create_table(conn)
+        create_table(conn, puzzle_type)
         conn.commit()
 
-        skip = set() if args.replace else existing_seeds(conn, seeds)
+        skip = set() if args.replace else existing_seeds(conn, puzzle_type, seeds)
         if skip:
             print(f"Skipping {len(skip)} seed(s) already stored")
 
@@ -146,13 +174,14 @@ def main(argv=None):
             if seed in skip:
                 continue
 
-            puzzle = build(seed, words, rank, **options)
-            save(conn, puzzle, replace=args.replace)
+            level = level_for(seed, args.level)
+            puzzle = build(puzzle_type, seed, level, words, rank, **options)
+            save(conn, puzzle, puzzle_type, replace=args.replace)
             conn.commit()
             saved += 1
-            print(f"{puzzle['puzzle_name']}: {', '.join(puzzle['words'])}")
+            print(f"{puzzle['puzzle_name']} (level {level}): {', '.join(puzzle['words'])}")
 
-        print(f"\nSaved {saved} puzzle(s) to {TABLE}")
+        print(f"\nSaved {saved} puzzle(s) to {table_name(puzzle_type)}")
 
     return 0
 

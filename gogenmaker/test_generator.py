@@ -1,4 +1,4 @@
-"""Tests for the Uber-Gogen generator.
+"""Tests for the Gogen generator: Uber, Ultra and Hyper.
 
 Run with:  python -m unittest test_generator
 """
@@ -9,8 +9,8 @@ import unittest
 import generator as g
 
 
-# Two puzzles taken from the published archive, used to check the solver agrees
-# with the real thing: clues plus words must admit exactly one grid.
+# Two Uber puzzles taken from the published archive, used to check the solver
+# agrees with the real thing: clues plus words must admit exactly one grid.
 PUBLISHED = [
     (
         ["BODY", "BOYLA", "CITHRENS", "FUMER", "GOVERNS", "ICY", "JILT",
@@ -141,7 +141,7 @@ class GenerationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.words, cls.rank = g.load_words()
-        cls.puzzles = g.generate_many(5, cls.words, cls.rank, seed=1234)
+        cls.puzzles = g.generate_many(5, "uber", 1, cls.words, cls.rank, seed=1234)
 
     def test_grid_holds_each_letter_once(self):
         for grid, _, _ in self.puzzles:
@@ -169,12 +169,132 @@ class GenerationTests(unittest.TestCase):
             self.assertEqual([letter for letter in clues if letter in g.VOWELS], [])
 
     def test_seed_makes_generation_repeatable(self):
-        again = g.generate_many(5, self.words, self.rank, seed=1234)
+        again = g.generate_many(5, "uber", 1, self.words, self.rank, seed=1234)
         self.assertEqual([p[1] for p in again], [p[1] for p in self.puzzles])
 
     def test_generate_many_returns_distinct_puzzles(self):
         grids = {"".join("".join(r) for r in p[0]) for p in self.puzzles}
         self.assertEqual(len(grids), len(self.puzzles))
+
+
+class LayoutTests(unittest.TestCase):
+    """Clue layouts, taken from the 2,752 published puzzles of each type."""
+
+    def test_uber_always_uses_the_same_nine_clues(self):
+        rng = random.Random(1)
+        self.assertEqual(g.clue_cells("uber", 1, rng), list(g.CLUE_CELLS))
+        self.assertEqual(g.clue_cells("uber", 7, rng), list(g.CLUE_CELLS))
+
+    def test_ultra_gives_away_less_as_the_week_goes_on(self):
+        rng = random.Random(2)
+        easiest = len(g.clue_cells("ultra", 1, rng))
+        hardest = max(len(layout) for layout in g.ULTRA_LAYOUTS[7])
+        self.assertEqual(easiest, 8)
+        self.assertLessEqual(hardest, 3)
+
+    def test_hyper_scatters_its_clues(self):
+        """Hyper puts clues anywhere, so repeated draws should differ."""
+        rng = random.Random(3)
+        draws = {tuple(g.clue_cells("hyper", 1, rng)) for _ in range(20)}
+        self.assertGreater(len(draws), 1)
+        for draw in draws:
+            self.assertEqual(len(draw), g.HYPER_CLUE_COUNT[1])
+
+    def test_unknown_type_and_level_are_rejected(self):
+        rng = random.Random(4)
+        with self.assertRaises(ValueError):
+            g.clue_cells("mega", 1, rng)
+        with self.assertRaises(ValueError):
+            g.generate("uber", level=8)
+
+
+class ChainTests(unittest.TestCase):
+    """Hyper clues are walks over the grid, not words."""
+
+    GRID = [["A", "B", "C", "D", "E"],
+            ["F", "G", "H", "I", "J"],
+            ["K", "L", "M", "N", "O"],
+            ["P", "Q", "R", "S", "T"],
+            ["U", "V", "W", "X", "Y"]]
+
+    def test_chains_trace_on_the_grid(self):
+        rng = random.Random(5)
+        positions = g.letter_positions(self.GRID)
+        for _ in range(200):
+            chain = g.random_chain(self.GRID, rng, rng.choice(g.CHAIN_LENGTHS))
+            self.assertGreaterEqual(len(chain), 2)
+            self.assertTrue(g.is_traceable(chain, positions), chain)
+
+    def test_chains_do_not_repeat_a_letter(self):
+        rng = random.Random(6)
+        for _ in range(100):
+            chain = g.random_chain(self.GRID, rng, 5)
+            self.assertEqual(len(set(chain)), len(chain), chain)
+
+
+class SearchBudgetTests(unittest.TestCase):
+
+    def test_an_exhausted_budget_is_not_mistaken_for_a_unique_puzzle(self):
+        """A search that runs out of budget must be discarded, never trusted."""
+        words, grid = PUBLISHED[0]
+        clues = g.clue_letters(grid)
+
+        with self.assertRaises(g.SearchTooHard):
+            g.count_solutions(clues, words[:1], limit=2, max_nodes=1)
+
+        self.assertFalse(g.has_unique_solution(clues, words, max_nodes=1))
+
+
+class UltraAndHyperTests(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.words, cls.rank = g.load_words()
+        cls.puzzles = {
+            ("ultra", 1): g.generate("ultra", 1, cls.words, cls.rank, random.Random(21)),
+            ("ultra", 7): g.generate("ultra", 7, cls.words, cls.rank, random.Random(27)),
+            ("hyper", 1): g.generate("hyper", 1, cls.words, cls.rank, random.Random(31)),
+            ("hyper", 7): g.generate("hyper", 7, cls.words, cls.rank, random.Random(37)),
+        }
+
+    def test_every_puzzle_was_generated(self):
+        for key, puzzle in self.puzzles.items():
+            self.assertIsNotNone(puzzle, f"{key} failed to generate")
+
+    def test_clues_are_uniquely_solvable(self):
+        for key, (_, strings, clues) in self.puzzles.items():
+            self.assertEqual(g.count_solutions(clues, strings), 1, key)
+
+    def test_clues_trace_on_the_grid(self):
+        for key, (grid, strings, _) in self.puzzles.items():
+            positions = g.letter_positions(grid)
+            for string in strings:
+                self.assertTrue(g.is_traceable(string, positions), f"{key} {string}")
+
+    def test_ultra_uses_real_words_but_hyper_does_not_have_to(self):
+        for (puzzle_type, _), (_, strings, _) in self.puzzles.items():
+            if puzzle_type == "ultra":
+                for word in strings:
+                    self.assertIn(word, self.rank, word)
+
+    def test_clue_counts_match_the_level(self):
+        for (puzzle_type, level), (_, _, clues) in self.puzzles.items():
+            if puzzle_type == "hyper":
+                self.assertEqual(len(clues), g.HYPER_CLUE_COUNT[level])
+            else:
+                sizes = [len(layout) for layout in g.ULTRA_LAYOUTS[level]]
+                self.assertIn(len(clues), sizes)
+
+    def test_no_vowels_are_given_away(self):
+        for key, (_, _, clues) in self.puzzles.items():
+            self.assertEqual([l for l in clues if l in g.VOWELS], [], key)
+
+    def test_ultra_shows_every_letter_in_its_words(self):
+        """Ultra gives away little, so its words cover the whole alphabet -
+        2,737 of the 2,752 published ones show all 25 letters."""
+        for (puzzle_type, _), (_, strings, _) in self.puzzles.items():
+            if puzzle_type == "ultra":
+                self.assertEqual(len(set("".join(strings))), 25)
 
 
 if __name__ == "__main__":

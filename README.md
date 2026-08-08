@@ -32,10 +32,12 @@ Tests:
 Web driver manager should now automatically handle installing the chrome web driver.
 
 Generated puzzles:
-`gogenmaker` builds original Uber-Gogens rather than scraping them. Puzzles are
-identified by seed and served at `/uber1`, `/uber2` and so on. See
-[gogenmaker/README.md](gogenmaker/README.md).
+`gogenmaker` builds original Uber, Ultra and Hyper Gogens rather than scraping
+them. Puzzles are identified by seed and served at `/uber1`, `/ultra1`,
+`/hyper1` and so on. See [gogenmaker/README.md](gogenmaker/README.md).
 ```bash
 cd gogenmaker
 python3 save_puzzles.py 1 20
+python3 save_puzzles.py 1 20 --type ultra
+python3 save_puzzles.py 1 20 --type hyper
 ```

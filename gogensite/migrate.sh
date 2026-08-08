@@ -2,7 +2,8 @@
 
 # User must pass in a app when running script
 if [ -z "$1" ]; then
-    echo "Usage: $0 <app>"
+    echo "Usage: $0 <app> <settings_file>"
+    echo "Typical Usage: $0 gogen deploy_settings"
     exit 1
 fi
 

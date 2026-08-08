@@ -22,7 +22,7 @@
         {% if not logged_in %}
             <div class="container">
                 <div class="row">
-                    <a href="/login" class="link-dark"><b>Login/Regsiter to track your progress and get access to a library of {{ puzzle_count|intcomma }} puzzles!</b></a>
+                    <a href="/login" class="link-dark"><b>Login/Register to track your progress and unlock all {{ puzzle_count|intcomma }} puzzles!</b></a>
                 </div>
             </div>
         {% endif %}
@@ -105,9 +105,6 @@
                     {% endfor %}
                 </ul>
             </div>
-        </div>
-        <div class="container mt-auto mb-2">
-            <a class="text-decoration-none p-2" href="{{ url }}">Puzzle Source</a>
         </div>
         <script>
             // When save button is clicked add a "clicked" attribute

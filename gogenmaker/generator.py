@@ -411,7 +411,7 @@ def generate_chain_puzzle(rng, cells, min_chains, max_chains, min_coverage,
 
 def generate(puzzle_type="uber", level=1, words=None, rank=None, rng=None,
              min_words=None, max_words=None, min_coverage=None,
-             min_candidates=12, attempts=2000, keep_off_clues=VOWELS):
+             min_candidates=12, attempts=5000, keep_off_clues=VOWELS):
     """Build one puzzle, or return None if `attempts` grids all fall short.
 
     `level` runs from 1 (Monday, easiest) to 7 (Sunday, hardest) and decides

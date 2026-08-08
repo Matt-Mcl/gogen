@@ -9,17 +9,22 @@ cycles Monday to Sunday: seeds 1 to 7 run easiest to hardest, seed 8 starts
 over. Use --level to pin every seed to one difficulty instead. Uber has no
 levels - every published one gives away the same nine letters.
 
+Generating a puzzle takes seconds, so seeds are spread over worker processes.
+A seed decides its puzzle by itself, so this changes nothing about the result.
+
 Examples:
     python save_puzzles.py 1 20                    # uber seeds 1 to 20
     python save_puzzles.py 1 20 --type ultra       # ultra, levels cycling
     python save_puzzles.py 1 20 --type hyper --level 7
     python save_puzzles.py 1 10 --replace
+    python save_puzzles.py 1 100 --jobs 6          # more workers
 """
 
 import argparse
 import os
 import random
 import sys
+from concurrent.futures import ProcessPoolExecutor
 
 import psycopg
 from dotenv import load_dotenv
@@ -27,6 +32,14 @@ from dotenv import load_dotenv
 from generator import LEVELS, generate, load_words, puzzle_board
 
 PUZZLE_TYPES = ("uber", "ultra", "hyper")
+
+# Generation is CPU-bound Python, so it needs processes rather than threads:
+# threads would take turns holding the GIL and run no faster than one.
+DEFAULT_JOBS = 5
+
+# The dictionary, loaded once per worker process by init_worker
+_words = None
+_rank = None
 
 
 def table_name(puzzle_type):
@@ -99,6 +112,40 @@ def build(puzzle_type, seed, level, words, rank, **options):
     }
 
 
+def init_worker():
+    """Load the dictionary once per worker, rather than sending it per seed."""
+    global _words, _rank
+    _words, _rank = load_words()
+
+
+def build_job(job):
+    """Worker entry point: one seed, built from the dictionary this process holds."""
+    puzzle_type, seed, level, options = job
+
+    return build(puzzle_type, seed, level, _words, _rank, **options)
+
+
+def build_all(jobs, workers):
+    """Yield each job's puzzle, in the order given, generating `workers` at once.
+
+    Seeds are independent - `build` gives each its own random.Random(seed) - so
+    sharing them out leaves every puzzle exactly as it would have been built one
+    at a time. Only the order they finish in changes, and that is put back here.
+    """
+    if workers == 1 or len(jobs) < 2:
+        words, rank = load_words()
+        for puzzle_type, seed, level, options in jobs:
+            yield build(puzzle_type, seed, level, words, rank, **options)
+
+        return
+
+    with ProcessPoolExecutor(min(workers, len(jobs)),
+                             initializer=init_worker) as pool:
+        # One seed per task: they take seconds each, so there is nothing to gain
+        # from batching them, and handing them out singly keeps the workers even
+        yield from pool.map(build_job, jobs)
+
+
 def save(conn, puzzle, puzzle_type, replace=False):
     conflict = (
         """DO UPDATE SET puzzle_url = EXCLUDED.puzzle_url,
@@ -140,6 +187,9 @@ def main(argv=None):
                         help="most clue strings (defaults to suit the type and level)")
     parser.add_argument("--min-coverage", type=int,
                         help="fewest distinct letters the clues must show")
+    parser.add_argument("--jobs", type=int, default=DEFAULT_JOBS,
+                        help=f"how many seeds to generate at once "
+                             f"(default {DEFAULT_JOBS}, 1 to stay in this process)")
     args = parser.parse_args(argv)
 
     last = args.last if args.last is not None else args.first
@@ -149,6 +199,8 @@ def main(argv=None):
         parser.error("last seed cannot be before the first")
     if args.min_words and args.max_words and args.min_words > args.max_words:
         parser.error("--min-words cannot exceed --max-words")
+    if args.jobs < 1:
+        parser.error("--jobs must be at least 1")
 
     puzzle_type = args.type
     seeds = range(args.first, last + 1)
@@ -159,8 +211,6 @@ def main(argv=None):
         ("min_coverage", args.min_coverage),
     ) if value is not None}
 
-    words, rank = load_words()
-
     with psycopg.connect(args.dsn or connection_string()) as conn:
         create_table(conn, puzzle_type)
         conn.commit()
@@ -169,13 +219,12 @@ def main(argv=None):
         if skip:
             print(f"Skipping {len(skip)} seed(s) already stored")
 
-        saved = 0
-        for seed in seeds:
-            if seed in skip:
-                continue
+        jobs = [(puzzle_type, seed, level_for(seed, args.level), options)
+                for seed in seeds if seed not in skip]
 
-            level = level_for(seed, args.level)
-            puzzle = build(puzzle_type, seed, level, words, rank, **options)
+        # The workers only generate: the connection stays here, in one process
+        saved = 0
+        for (_, _, level, _), puzzle in zip(jobs, build_all(jobs, args.jobs)):
             save(conn, puzzle, puzzle_type, replace=args.replace)
             conn.commit()
             saved += 1

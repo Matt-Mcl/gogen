@@ -85,6 +85,22 @@ class SettingsTestCase(TransactionTestCase):
         settings = Settings.objects.create(user=self.test_user)
         self.assertEqual(settings.notes_enabled, True)
         self.assertEqual(settings.preset_notes, None)
+        self.assertEqual(settings.fill_hints, 'N')
+
+    def test_hints_can_be_set_to_each_choice(self):
+        settings = Settings.objects.create(user=self.test_user)
+
+        for choice, _ in Settings.HINT_CHOICES:
+            settings.fill_hints = choice
+            settings.save()
+            settings.refresh_from_db()
+            self.assertEqual(settings.fill_hints, choice)
+
+    def test_hints_cannot_be_set_to_an_unknown_choice(self):
+        Settings.objects.create(user=self.test_user)
+        settings_qd = Settings.objects.filter(user=self.test_user)
+
+        self.assertRaises(DataError, settings_qd.update, fill_hints="Invalid")
     
 
 

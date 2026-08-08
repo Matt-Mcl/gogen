@@ -11,16 +11,13 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav">
                         <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="/">Daily Uber</a>
+                            <a class="nav-link" href="/uber">Uber</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/puzzlelist/uber">Uber Gogens</a>
+                            <a class="nav-link" href="/ultra">Ultra</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/puzzlelist/ultra">Ultra Gogens</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/puzzlelist/hyper">Hyper Gogens</a>
+                            <a class="nav-link" href="/hyper">Hyper</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="/leaderboard">Leaderboard</a>
@@ -29,7 +26,11 @@
                             <a class="nav-link" href="/settings">Settings</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/logout">Logout</a>
+                            <!-- LogoutView is POST-only from Django 5.0 onwards. -->
+                            <form method="post" action="{% url 'logout' %}" class="m-0">
+                                {% csrf_token %}
+                                <button type="submit" name="logout_button" class="nav-link btn btn-link text-decoration-none">Logout</button>
+                            </form>
                         </li>
                     </ul>
                 </div>

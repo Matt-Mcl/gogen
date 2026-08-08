@@ -2,23 +2,25 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login, authenticate
-from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from datetime import datetime, timedelta
-from django.conf import settings
-import psycopg
 
 from .models import *
 from .helpers import views_helper
 
 
 def daily_view(request):
+    """Today's puzzle: a generated uber whose seed advances one per day."""
 
-    if request.method == "GET":
-        today = datetime.now().strftime('%Y%m%d')
-        return views_helper.get_puzzle(request, "uber", today, "Daily Uber")
+    puzzle_type = views_helper.DAILY_TYPE
+    seed = views_helper.daily_seed()
+    page_heading = "Daily Uber"
 
     if request.method == "POST":
-        return views_helper.post_puzzle(request, "Daily Uber")
+        # Score against the puzzle the page was rendered from, not whatever
+        # today's seed has become since
+        seed = views_helper.seed_from_posted_url(request, puzzle_type) or seed
+        return views_helper.post_generated_puzzle(request, puzzle_type, seed, page_heading, is_daily=True)
+
+    return views_helper.get_generated_puzzle(request, puzzle_type, seed, page_heading, is_daily=True)
 
 
 @login_required
@@ -35,7 +37,7 @@ def generated_puzzle_view(request, puzzle_type, seed):
     """Puzzles built by gogenmaker, addressed by generation seed: /uber1, /hyper2..."""
 
     seed = int(seed)
-    page_heading = f"Generated {puzzle_type.capitalize()} {seed}"
+    page_heading = f"{puzzle_type.capitalize()} {seed}"
 
     if request.method == "GET":
         return views_helper.get_generated_puzzle(request, puzzle_type, seed, page_heading)
@@ -44,62 +46,14 @@ def generated_puzzle_view(request, puzzle_type, seed):
         return views_helper.post_generated_puzzle(request, puzzle_type, seed, page_heading)
 
 
-@login_required
-def puzzle_list_view(request, puzzle_type):
+def difficulty_view(request, puzzle_type):
+    """/uber, /ultra and /hyper: jump to the earliest puzzle not yet solved.
 
-    if request.method == "GET":
-        puzzles = []
+    Not login-only: a logged out visitor has completed nothing, so they land
+    on the first puzzle rather than being bounced through the login page.
+    """
 
-        this_page = request.GET.get("page", 1)
-
-        # Get all puzzles by type
-        with psycopg.connect(settings.PG_CONNECTION) as conn:
-            with conn.cursor() as cur:
-                cur.execute(f"SELECT puzzle_name FROM {puzzle_type} ORDER BY puzzle_name DESC")
-                db_puzzles = cur.fetchall()
-
-        # Paginate to keep 15 per page
-        paginated_puzzles = Paginator(db_puzzles, 15)
-
-        # Validate invalid page numbers
-        try:
-            page_puzzles = paginated_puzzles.page(this_page)
-        except (PageNotAnInteger, EmptyPage):
-            return redirect(f"/puzzlelist/{puzzle_type}")
-
-        # Check if the user has completed the puzzle
-        for puzzle in page_puzzles:
-            p_type = puzzle[0][:-8]
-            p_date = puzzle[0][-8:]
-            user_puzzle_log = PuzzleLog.objects.filter(puzzle_type=p_type, puzzle_date=p_date, user=request.user)
-
-            if user_puzzle_log.count() > 0 and user_puzzle_log[0].status == PuzzleLog.STATUS_CHOICES[0][0]:
-                puzzles.append( (puzzle[0], "✓") )
-            else:
-                puzzles.append( (puzzle[0], "-") )
-
-        lower_range = range(1, paginated_puzzles.num_pages + 1)
-        upper_range = None
-        # If greater that 20 pages split into first and last 10
-        if paginated_puzzles.num_pages > 20:
-            lower_range = range(1, 11)
-            upper_range = range(paginated_puzzles.num_pages - 9, paginated_puzzles.num_pages + 1)
-        # Scroll numbers if page past 5
-        if int(this_page) > 5 and paginated_puzzles.num_pages - int(this_page) > 8:
-            lower_range = range(int(this_page) - 4, min(11 + int(this_page) - 5, paginated_puzzles.num_pages - 9))
-
-        return render(
-            request=request,
-            template_name="gogen/puzzle_list.html",
-            context={
-                'page_puzzles': page_puzzles,
-                'puzzle_type': puzzle_type.capitalize(),
-                'puzzles': puzzles,
-                'lower_range': lower_range,
-                'upper_range': upper_range,
-                'page_heading': "Puzzle List"
-            }
-        )
+    return views_helper.redirect_to_earliest_incomplete(request, puzzle_type)
 
 
 @login_required
@@ -110,10 +64,15 @@ def leaderboard_view(request):
     for user in User.objects.all():
         if not user.is_superuser:
             user_puzzle_logs = PuzzleLog.objects.filter(user=user, status='C')
-            uber_count = user_puzzle_logs.filter(puzzle_type='uber').count()
-            ultra_count = user_puzzle_logs.filter(puzzle_type='ultra').count()
-            hyper_count = user_puzzle_logs.filter(puzzle_type='hyper').count()
-            users_and_scores.append( (user.username, uber_count, ultra_count, hyper_count, user_puzzle_logs.count()) )
+            # Each column counts the archive and the generated puzzles together,
+            # so the three of them add up to the total
+            counts = [
+                user_puzzle_logs.filter(
+                    puzzle_type__in=(puzzle_type, views_helper.generated_log_type(puzzle_type))
+                ).count()
+                for puzzle_type in views_helper.GENERATED_TYPES
+            ]
+            users_and_scores.append( (user.username, *counts, sum(counts)) )
     
     users_and_scores.sort(key=lambda x: x[1], reverse=True)
 
@@ -142,20 +101,25 @@ def settings_view(request):
         else:
             user_settings.notes_enabled = False
 
-        if request.POST.get("fill_vowels_enabled") == "on":
-            user_settings.fill_vowels_enabled = True
-        else:
-            user_settings.fill_vowels_enabled = False
+        # Anything unrecognised, including the radios being disabled because
+        # the notes box is off, means no hints
+        fill_hints = request.POST.get("fill_hints")
+        valid_hints = [choice for choice, _ in Settings.HINT_CHOICES]
+
+        user_settings.fill_hints = fill_hints if fill_hints in valid_hints else 'N'
         
         
-        # If a notes preset is selected
-        notes_preset = [x for x in request.POST.keys() if "notes_preset" in x]
+        # If a notes preset is selected. The whole id is taken off the field
+        # name, not just its last character, so presets past number 9 work.
+        notes_preset = [x for x in request.POST.keys() if x.startswith("notes_preset_")]
+
+        user_settings.preset_notes = None
 
         if notes_preset:
-            notes_preset = notes_preset[0]
-            user_settings.preset_notes = NoteTemplate.objects.get(id=notes_preset[-1])
-        else:
-            user_settings.preset_notes = None
+            preset_id = notes_preset[0].removeprefix("notes_preset_")
+            # An id that is not a stored preset means none, rather than a 500
+            if preset_id.isdigit():
+                user_settings.preset_notes = NoteTemplate.objects.filter(id=preset_id).first()
 
     user_settings.save()
 
@@ -166,7 +130,8 @@ def settings_view(request):
         template_name="gogen/settings.html",
         context={
             'notes_value': user_settings.notes_enabled,
-            'fill_vowels_value': user_settings.fill_vowels_enabled,
+            'hint_choices': Settings.HINT_CHOICES,
+            'selected_hints': user_settings.fill_hints,
             'presets': presets,
             'selected_preset': user_settings.preset_notes,
             'page_heading': "Gogen Settings",

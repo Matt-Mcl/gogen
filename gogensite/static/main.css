@@ -144,36 +144,6 @@ body {
   box-shadow: 0 0 0 0.2rem rgba(90, 178, 255, 0.2);
 }
 
-/* ===== Puzzle list table ===== */
-.puzzle-list-table thead th {
-  background-color: var(--mcl3);
-  color: #0a2540;
-  font-weight: 600;
-  border: none !important;
-}
-
-.puzzle-list-table tbody tr:hover {
-  background-color: var(--mcl1);
-}
-
-.status-badge {
-  padding: 3px 12px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  display: inline-block;
-}
-
-.status-complete {
-  background-color: #d1f2eb;
-  color: #1a6640;
-}
-
-.status-incomplete {
-  background-color: #f0f0f0;
-  color: #999;
-}
-
 /* ===== Leaderboard ===== */
 .leaderboard-table thead th {
   background-color: var(--mcl3);

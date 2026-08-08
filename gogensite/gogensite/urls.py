@@ -28,13 +28,15 @@ urlpatterns = [
     path('settings/', views.settings_view, name='settings'),
     path('register/', views.register, name='register'),
 
-    re_path(r'^(puzzlelist\/)(?P<puzzle_type>uber|hyper|ultra)$', views.puzzle_list_view, name='puzzle_list_view'),
+    # Scraped puzzles, addressed by date.
+    re_path(r'^(?P<puzzle_type>uber|hyper|ultra)_archive(?P<puzzle_date>(\d{4})(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01]))$', views.puzzle_view, name='puzzle_view'),
 
-    re_path(r'^(?P<puzzle_type>uber|hyper|ultra)(?P<puzzle_date>(\d{4})(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01]))$', views.puzzle_view, name='puzzle_view'),
+    # Generated puzzles, addressed by seed. Unbounded, because dates now sit
+    # behind _archive and can no longer be swallowed by a seed.
+    re_path(r'^(?P<puzzle_type>uber|hyper|ultra)(?P<seed>[1-9]\d*)$', views.generated_puzzle_view, name='generated_puzzle_view'),
 
-    # Generated puzzles are addressed by seed. Capped at 7 digits so it can
-    # never collide with the 8 digit date above.
-    re_path(r'^(?P<puzzle_type>uber|hyper|ultra)(?P<seed>[1-9]\d{0,6})$', views.generated_puzzle_view, name='generated_puzzle_view'),
+    # Difficulty switcher: jump to the earliest puzzle of this type not yet solved.
+    re_path(r'^(?P<puzzle_type>uber|hyper|ultra)$', views.difficulty_view, name='difficulty_view'),
 
     path('', views.daily_view, name='daily_view'),
 ]

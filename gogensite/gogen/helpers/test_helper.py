@@ -15,3 +15,15 @@ def get_puzzle(puzzle_type, puzzle_date):
                 puzzle = cur.fetchone()
 
     return puzzle
+
+
+def get_generated_puzzle(puzzle_type, seed):
+    """Pull a generated puzzle straight from the puzzle database."""
+
+    with psycopg.connect(settings.PG_CONNECTION) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                f"SELECT * FROM {puzzle_type}_generated WHERE puzzle_name = %s;",
+                (f"{puzzle_type}{seed}",),
+            )
+            return cur.fetchone()

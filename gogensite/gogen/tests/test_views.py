@@ -1,14 +1,15 @@
 from gogen.models import *
-from datetime import datetime
 from selenium import webdriver
+from django.contrib.auth.models import User
+from django.test import TestCase
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.common.exceptions import ElementClickInterceptedException, TimeoutException
 from selenium.webdriver.support.wait import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
-from ..helpers import test_helper
+from ..helpers import test_helper, views_helper
 import time
 
 def login_user(selenium_driver, live_server_url, username, password):
@@ -26,7 +27,14 @@ def login_user(selenium_driver, live_server_url, username, password):
 
 def wait_for_title(selenium_driver, title):
     wait = WebDriverWait(selenium_driver, timeout=5)
-    wait.until(lambda _ : selenium_driver.title == title)
+    try:
+        wait.until(lambda _ : selenium_driver.title == title)
+    except TimeoutException:
+        # Say what actually loaded, otherwise a timeout tells you nothing
+        raise AssertionError(
+            f"Expected title {title!r} but got {selenium_driver.title!r} "
+            f"at {selenium_driver.current_url}"
+        ) from None
 
 class RegisterLoginPageCase(StaticLiveServerTestCase):
 
@@ -81,7 +89,9 @@ class RegisterLoginPageCase(StaticLiveServerTestCase):
 
         self.assertEqual(self.selenium.title, "Daily Uber")
 
-        self.selenium.get(f"{self.live_server_url}/logout")
+        # Logout is a POST form in the navbar, not a link.
+        self.selenium.find_element(By.NAME, "logout_button").click()
+        wait_for_title(self.selenium, "Gogen Login")
 
         self.assertEqual(self.selenium.title, "Gogen Login")
 
@@ -108,8 +118,7 @@ class DailyUberCase(StaticLiveServerTestCase):
 
     @classmethod
     def complete_daily_uber(self):
-        today = datetime.now().strftime('%Y%m%d')
-        puzzle = test_helper.get_puzzle("uber", today)
+        puzzle = test_helper.get_generated_puzzle("uber", views_helper.daily_seed())
 
         solution_board = puzzle[5]
 
@@ -195,6 +204,15 @@ class PuzzlePageLoggedOutCase(StaticLiveServerTestCase):
         cls.selenium.quit()
         super().tearDownClass()
 
+    def test_next_is_disabled_when_logged_out(self):
+        """Logged out you get the daily puzzle and nothing more."""
+        self.selenium.get(f"{self.live_server_url}/")
+        wait_for_title(self.selenium, "Daily Uber")
+
+        next_button = self.selenium.find_element(By.NAME, "next_button")
+
+        self.assertIsNotNone(next_button.get_attribute("disabled"))
+
     def test_can_add_placeholder(self):
         self.selenium.get(f"{self.live_server_url}/")
         wait_for_title(self.selenium, "Daily Uber")
@@ -253,7 +271,7 @@ class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
 
     def test_can_save_and_load(self):
         login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
-        self.selenium.get(f"{self.live_server_url}/uber20190120")
+        self.selenium.get(f"{self.live_server_url}/uber_archive20190120")
         wait_for_title(self.selenium, "Uber20190120")
 
         letter_input = self.selenium.find_element(By.NAME, "01_board_letter")
@@ -270,7 +288,7 @@ class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
 
         wait.until(lambda _ : "saved" in save_button.get_attribute("class"))
 
-        self.selenium.get(f"{self.live_server_url}/uber20190120")
+        self.selenium.get(f"{self.live_server_url}/uber_archive20190120")
         wait_for_title(self.selenium, "Uber20190120")
 
         letter_input = self.selenium.find_element(By.NAME, "01_board_letter")
@@ -285,14 +303,14 @@ class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
     #     login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
 
     #     PuzzleLog.objects.create(puzzle_type="uber", puzzle_date="20190120", board=[['V', 'C', 'X', 'H', 'W'], ['F', 'I', 'B', 'O', 'R'], ['T', 'E', 'D', 'Y', 'J'], ['K', 'U', 'G', 'A', 'M'], ['S', 'L', 'Q', 'N', 'P']], placeholders=[], status="C", user=User.objects.get(username="testuser"))
-    #     self.selenium.get(f"{self.live_server_url}/uber20190120")
+    #     self.selenium.get(f"{self.live_server_url}/uber_archive20190120")
     #     submit_button = self.selenium.find_element(By.NAME, "submit_button")
     #     submit_button.click()
 
     #     status_heading = self.selenium.find_element(By.CLASS_NAME, "fadingHeading").text
     #     self.assertEqual(status_heading, "Correct!")
 
-    #     self.selenium.get(f"{self.live_server_url}/uber20190120")
+    #     self.selenium.get(f"{self.live_server_url}/uber_archive20190120")
 
     #     submit_button = self.selenium.find_element(By.NAME, "submit_button")
     #     submit_button.click()
@@ -302,7 +320,7 @@ class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
 
     def test_can_next(self):
         login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
-        self.selenium.get(f"{self.live_server_url}/uber20190120")
+        self.selenium.get(f"{self.live_server_url}/uber_archive20190120")
         wait_for_title(self.selenium, "Uber20190120")
 
         next_button = self.selenium.find_element(By.NAME, "next_button")
@@ -310,7 +328,7 @@ class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
         self.assertRaises(ElementClickInterceptedException, next_button.click)
 
         PuzzleLog.objects.create(puzzle_type="uber", puzzle_date="20190121", board=[], placeholders=[], status="C", user=User.objects.get(username="testuser"))
-        self.selenium.get(f"{self.live_server_url}/uber20190122")
+        self.selenium.get(f"{self.live_server_url}/uber_archive20190122")
         next_button = self.selenium.find_element(By.NAME, "next_button")
         next_button.click()
         self.assertEqual(self.selenium.title, "Uber20190120")
@@ -321,7 +339,7 @@ class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
         PuzzleLog.objects.create(puzzle_type="uber", puzzle_date="20190130", board=[], placeholders=[], status="C", user=User.objects.get(username="testuser"))
         PuzzleLog.objects.create(puzzle_type="uber", puzzle_date="20190129", board=[], placeholders=[], status="I", user=User.objects.get(username="testuser"))
 
-        self.selenium.get(f"{self.live_server_url}/uber20190201")
+        self.selenium.get(f"{self.live_server_url}/uber_archive20190201")
         wait_for_title(self.selenium, "Uber20190201")
 
         next_button = self.selenium.find_element(By.NAME, "next_button")
@@ -332,16 +350,27 @@ class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
         login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
         PuzzleLog.objects.create(puzzle_type="uber", puzzle_date="20190120", board=[], placeholders=[], status="C", user=User.objects.get(username="testuser"))
 
-        self.selenium.get(f"{self.live_server_url}/uber20190122")
+        self.selenium.get(f"{self.live_server_url}/uber_archive20190122")
         wait_for_title(self.selenium, "Uber20190122")
 
         next_button = self.selenium.find_element(By.NAME, "next_button")
         next_button.click()
         self.assertEqual(self.selenium.title, "Uber20190121")
 
+    def test_navbar_switches_difficulty(self):
+        """Each navbar link drops the user on that type's earliest puzzle."""
+        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+
+        for puzzle_type in ("Uber", "Ultra", "Hyper"):
+            link = self.selenium.find_element(By.LINK_TEXT, puzzle_type)
+            link.click()
+            wait_for_title(self.selenium, f"{puzzle_type} 1")
+
+            self.assertEqual(self.selenium.title, f"{puzzle_type} 1")
+
     def test_letters_cross_off(self):
         login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
-        self.selenium.get(f"{self.live_server_url}/uber20190120")
+        self.selenium.get(f"{self.live_server_url}/uber_archive20190120")
         wait_for_title(self.selenium, "Uber20190120")
 
         letter_input = self.selenium.find_element(By.NAME, "01_board_letter")
@@ -351,7 +380,7 @@ class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
 
     def test_words_cross_off(self):
         login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
-        self.selenium.get(f"{self.live_server_url}/uber20190120")
+        self.selenium.get(f"{self.live_server_url}/uber_archive20190120")
         wait_for_title(self.selenium, "Uber20190120")
         
         letter_input = self.selenium.find_element(By.NAME, "10_board_letter")
@@ -369,6 +398,49 @@ class PuzzlePageLoggedInCase(StaticLiveServerTestCase):
         self.assertEqual(began_word.get_attribute("style"), "text-decoration: line-through; color: rgb(211, 211, 211);")
 
 
+class SettingsPresetTestCase(TestCase):
+    """Which preset a POST to the settings page selects.
+
+    The browser test below covers this end to end, but only ever sees the ids
+    that happen to exist in its run, so the awkward ones are pinned here.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="testuser", password="testpassword")
+        self.client.login(username="testuser", password="testpassword")
+
+    def select(self, field):
+        response = self.client.post("/settings/", {"notes_enabled": "on", field: "on"})
+
+        return response, Settings.objects.get(user=self.user).preset_notes
+
+    def test_a_preset_can_be_selected(self):
+        preset = NoteTemplate.objects.create(name="test name", template="test template")
+
+        self.assertEqual(self.select(f"notes_preset_{preset.id}")[1], preset)
+
+    def test_a_preset_past_number_nine_can_be_selected(self):
+        """Regression: only the last digit of the id used to be read, so
+        preset 10 was looked up as preset 0 and blew the page up."""
+        preset = NoteTemplate.objects.create(id=10, name="ten", template="ten template")
+
+        self.assertEqual(self.select(f"notes_preset_{preset.id}")[1], preset)
+
+    def test_selecting_none_clears_the_preset(self):
+        preset = NoteTemplate.objects.create(name="test name", template="test template")
+        self.select(f"notes_preset_{preset.id}")
+
+        self.assertIsNone(self.select("notes_none")[1])
+
+    def test_an_unknown_preset_is_treated_as_none(self):
+        """A tampered or stale form must not 500 the settings page."""
+        for field in ["notes_preset_999999", "notes_preset_", "notes_preset_abc"]:
+            response, selected = self.select(field)
+
+            self.assertEqual(response.status_code, 200, field)
+            self.assertIsNone(selected, field)
+
+
 class SettingsPageCase(StaticLiveServerTestCase):
 
     @classmethod
@@ -382,7 +454,9 @@ class SettingsPageCase(StaticLiveServerTestCase):
         chrome_options.add_argument('--remote-debugging-pipe')
         cls.selenium = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         cls.selenium.implicitly_wait(10)
-        NoteTemplate.objects.create(name="test name", template="test template")
+        # Keep the id: sequences are not reset between tests, so the preset is
+        # not necessarily number 1 once other tests have created templates
+        cls.preset = NoteTemplate.objects.create(name="test name", template="test template")
 
     @classmethod
     def tearDownClass(cls):
@@ -415,6 +489,35 @@ class SettingsPageCase(StaticLiveServerTestCase):
         test_user = User.objects.get(username="testuser")
         self.assertEqual(test_user.settings.notes_enabled, False)
 
+    def test_hints_can_be_changed(self):
+        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+        self.selenium.get(f"{self.live_server_url}/settings")
+        wait_for_title(self.selenium, "Gogen Settings")
+
+        self.assertEqual(User.objects.get(username="testuser").settings.fill_hints, "N")
+
+        self.selenium.find_element(By.ID, "fill_hints_A").click()
+
+        save_button = self.selenium.find_element(By.NAME, "save_button")
+        wait = WebDriverWait(self.selenium, timeout=5)
+        save_button.click()
+        wait.until(lambda _ : "saved" in save_button.get_attribute("class"))
+
+        self.assertEqual(User.objects.get(username="testuser").settings.fill_hints, "A")
+
+    def test_hints_are_disabled_without_a_notes_box(self):
+        """Hints have nowhere to go when the notes box is switched off."""
+        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
+        self.selenium.get(f"{self.live_server_url}/settings")
+        wait_for_title(self.selenium, "Gogen Settings")
+
+        self.assertTrue(self.selenium.find_element(By.ID, "fill_hints_A").is_enabled())
+
+        self.selenium.find_element(By.NAME, "notes_enabled").click()
+
+        self.assertFalse(self.selenium.find_element(By.ID, "fill_hints_A").is_enabled())
+        self.assertTrue(self.selenium.find_element(By.ID, "fill_hints_N").is_selected())
+
     def test_can_change_notes_preset(self):
         login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
         self.selenium.get(f"{self.live_server_url}/settings")
@@ -422,7 +525,7 @@ class SettingsPageCase(StaticLiveServerTestCase):
 
         test_user = User.objects.get(username="testuser")
         self.assertEqual(test_user.settings.preset_notes, None)
-        notes_input = self.selenium.find_element(By.NAME, "notes_preset_1")
+        notes_input = self.selenium.find_element(By.NAME, f"notes_preset_{self.preset.id}")
         notes_input.click()
 
         save_button = self.selenium.find_element(By.NAME, "save_button")
@@ -435,7 +538,7 @@ class SettingsPageCase(StaticLiveServerTestCase):
         self.assertEqual(test_user.settings.preset_notes.name, "test name")
         self.assertEqual(test_user.settings.preset_notes.template, "test template")
         
-        self.selenium.get(f"{self.live_server_url}/uber20190120")
+        self.selenium.get(f"{self.live_server_url}/uber_archive20190120")
         wait_for_title(self.selenium, "Uber20190120")
 
         notes_input = self.selenium.find_element(By.ID, "notes_box")
@@ -490,111 +593,3 @@ class LeaderboardPageCase(StaticLiveServerTestCase):
 
         self.assertEqual(table_rows[1].find_elements(By.TAG_NAME, "td")[1].text, "testuser2")
         self.assertEqual(table_rows[2].find_elements(By.TAG_NAME, "td")[1].text, "testuser")
-
-
-class PuzzleListPageCase(StaticLiveServerTestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--window-size=1920,1080")
-        chrome_options.add_argument('--remote-debugging-pipe')
-        cls.selenium = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-        cls.selenium.implicitly_wait(10)
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.selenium.quit()
-        super().tearDownClass()
-
-    def test_can_load_puzzle_list(self):
-        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
-        self.selenium.get(f"{self.live_server_url}/puzzlelist/uber")
-        wait_for_title(self.selenium, "Uber Puzzle List")
-
-        self.assertEqual(self.selenium.title, "Uber Puzzle List")
-
-        self.selenium.get(f"{self.live_server_url}/puzzlelist/ultra")
-        wait_for_title(self.selenium, "Ultra Puzzle List")
-
-        self.assertEqual(self.selenium.title, "Ultra Puzzle List")
-
-        self.selenium.get(f"{self.live_server_url}/puzzlelist/hyper")
-        wait_for_title(self.selenium, "Hyper Puzzle List")
-
-        self.assertEqual(self.selenium.title, "Hyper Puzzle List")
-
-    def test_can_click_on_puzzle(self):
-        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
-        self.selenium.get(f"{self.live_server_url}/puzzlelist/uber")
-        wait_for_title(self.selenium, "Uber Puzzle List")
-
-        puzzle_table = self.selenium.find_element(By.NAME, "puzzle_table")
-        puzzle_link = puzzle_table.find_elements(By.TAG_NAME, "a")[0]
-        uber_name = puzzle_link.text
-
-        puzzle_link.click()
-        self.assertEqual(self.selenium.title, f"Uber{uber_name}")
-
-    def test_can_change_page_by_button(self):
-        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
-        self.selenium.get(f"{self.live_server_url}/puzzlelist/uber")
-        wait_for_title(self.selenium, "Uber Puzzle List")
-
-        self.assertEqual(self.selenium.title, "Uber Puzzle List")
-        page_button = self.selenium.find_element(By.NAME, "2_page_button")
-
-        page_button.click()
-
-        self.assertEqual(self.selenium.title, "Uber Puzzle List")
-        self.assertEqual(self.selenium.current_url, f"{self.live_server_url}/puzzlelist/uber?page=2")
-
-    def test_can_change_page_by_input(self):
-        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
-        self.selenium.get(f"{self.live_server_url}/puzzlelist/uber")
-        wait_for_title(self.selenium, "Uber Puzzle List")
-
-        page_input = self.selenium.find_element(By.NAME, "page")
-
-        page_input.send_keys("2")
-
-        submit_button = self.selenium.find_element(By.ID, "submit_button")
-        submit_button.click()
-        wait_for_title(self.selenium, "Uber Puzzle List")
-        time.sleep(1)
-
-        self.assertEqual(self.selenium.title, "Uber Puzzle List")
-        self.assertEqual(self.selenium.current_url, f"{self.live_server_url}/puzzlelist/uber?page=2")
-
-    def test_cannot_go_to_invalid_page(self):
-        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
-        self.selenium.get(f"{self.live_server_url}/puzzlelist/uber?page=9999")
-        wait_for_title(self.selenium, "Uber Puzzle List")
-
-        self.assertEqual(self.selenium.title, "Uber Puzzle List")
-        self.assertEqual(self.selenium.current_url, f"{self.live_server_url}/puzzlelist/uber")
-
-    def test_complete_puzzles_are_ticked_off(self):
-        login_user(self.selenium, self.live_server_url, "testuser", "testpassword")
-        self.selenium.get(f"{self.live_server_url}/puzzlelist/uber")
-        wait_for_title(self.selenium, "Uber Puzzle List")
-
-        puzzle_table = self.selenium.find_element(By.NAME, "puzzle_table")
-        uber_name = puzzle_table.find_elements(By.TAG_NAME, "a")[0]
-        puzzle_status = puzzle_table.find_elements(By.TAG_NAME, "td")[1]
-        self.assertEqual(puzzle_status.text, "-")
-
-        PuzzleLog.objects.create(puzzle_type="uber", puzzle_date=uber_name.text, board=[], placeholders=[], status="C", user=User.objects.get(username="testuser"))
-
-        self.selenium.get(f"{self.live_server_url}/puzzlelist/uber")
-        wait_for_title(self.selenium, "Uber Puzzle List")
-
-        puzzle_table = self.selenium.find_element(By.NAME, "puzzle_table")
-        puzzle_status = puzzle_table.find_elements(By.TAG_NAME, "td")[1]
-
-        self.assertEqual(puzzle_status.text, "✓")
-

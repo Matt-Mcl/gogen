@@ -208,6 +208,36 @@
                         update_remaining_letters();
                     }
                 });
+
+                // Handle backspace to always delete the letter (when not in ghost mode)
+                elem.bind("keydown", function(event) {
+                    const isGhostMode = $("button[name=ghost_button]")[0].className.includes("success");
+                    
+                    if (!isGhostMode) {
+                        // Backspace key
+                        if (event.keyCode === 8 || event.key === "Backspace") {
+                            event.preventDefault();
+                            elem.val("");
+                            elem.data('oldVal', "");
+                            update_remaining_letters();
+                        }
+                    }
+                });
+
+                // Handle character input to replace existing letter (when not in ghost mode)
+                elem.bind("beforeinput", function(event) {
+                    const isGhostMode = $("button[name=ghost_button]")[0].className.includes("success");
+
+                    if (!isGhostMode && event.originalEvent.inputType === "insertText" && event.originalEvent.data) {
+                        // If there's already a character, clear it first so the new one replaces it
+                        if (elem.val().length > 0) {
+                            event.preventDefault();
+                            elem.val(event.originalEvent.data.toUpperCase());
+                            elem.data('oldVal', event.originalEvent.data.toUpperCase());
+                            update_remaining_letters();
+                        }
+                    }
+                });
             });
 
             // Update remaining words to reflect strings of letters in form
